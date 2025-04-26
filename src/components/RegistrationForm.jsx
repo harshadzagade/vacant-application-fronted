@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const RegistrationForm = ({ onRegistrationSuccess }) => {
   const [formData, setFormData] = useState({
@@ -7,13 +8,26 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
     lastName: '',
     email: '',
     password: '',
-    phoneNo: ''
+    phoneNo: '',
+    code: '', // Added for instituteCode
   });
   const [errors, setErrors] = useState({});
   const [otp, setOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [instituteId, setInstituteId] = useState(null); // Changed from userId
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [apiError, setApiError] = useState('');
+
+  // Extract instituteCode from URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const instituteCode = urlParams.get('code');
+    if (instituteCode) {
+      setFormData(prev => ({ ...prev, code: instituteCode }));
+    } else {
+      setApiError('Institute code is missing in the URL');
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -25,6 +39,7 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (!formData.phoneNo) newErrors.phoneNo = 'Phone number is required';
     else if (!/^\d{10}$/.test(formData.phoneNo)) newErrors.phoneNo = 'Invalid phone number (10 digits required)';
+    if (!formData.code) newErrors.code = 'Institute code is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -33,38 +48,62 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: '' }));
+    setApiError('');
     if (name === 'phoneNo' && isOtpSent) {
       setIsOtpSent(false);
       setIsOtpVerified(false);
-      setGeneratedOtp(null);
+      setInstituteId(null);
       setOtp('');
     }
   };
 
-  const handleSendOtp = () => {
-    if (!formData.phoneNo) {
-      setErrors(prev => ({ ...prev, phoneNo: 'Phone number is required' }));
+  const handleSendOtp = async () => {
+    if (!validateForm()) {
       return;
     }
-    if (!/^\d{10}$/.test(formData.phoneNo)) {
-      setErrors(prev => ({ ...prev, phoneNo: 'Invalid phone number (10 digits required)' }));
-      return;
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
+        firstName: formData.firstName,
+        middleName: formData.middleName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        phoneNo: formData.phoneNo,
+        code: formData.code,
+      });
+      setInstituteId(response.data.instituteId); // Store instituteId
+      setIsOtpSent(true);
+      setApiError('');
+    } catch (error) {
+      setApiError(error.response?.data?.message || 'Failed to send OTP');
     }
-    
-    // Simulate OTP generation (in a real app, this would be sent via SMS)
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(newOtp);
-    setIsOtpSent(true);
-    console.log('Generated OTP:', newOtp); // For demo purposes
-    alert(`OTP sent to ${formData.phoneNo}: ${newOtp}`); // For demo purposes
   };
 
-  const handleVerifyOtp = () => {
-    if (otp === generatedOtp) {
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      setErrors(prev => ({ ...prev, otp: 'Please enter the OTP' }));
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+        phoneNo: formData.phoneNo,
+        otp,
+        firstName: formData.firstName,
+        middleName: formData.middleName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        instituteId, // Send instituteId from register response
+      });
       setIsOtpVerified(true);
       setErrors(prev => ({ ...prev, otp: '' }));
-    } else {
-      setErrors(prev => ({ ...prev, otp: 'Invalid OTP' }));
+      setApiError('');
+      onRegistrationSuccess(); // Call success callback after verification
+    } catch (error) {
+      setErrors(prev => ({ ...prev, otp: error.response?.data?.message || 'Invalid OTP' }));
       setIsOtpVerified(false);
     }
   };
@@ -72,8 +111,10 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm() && isOtpVerified) {
-      console.log('Registration data:', formData);
+      // No additional API call needed here since verifyOTP handles user creation
       onRegistrationSuccess();
+    } else if (!isOtpVerified) {
+      setApiError('Please verify OTP before registering');
     }
   };
 
@@ -87,7 +128,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.firstName ? 'border-red-500' : 'border-brand-200'}`}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+              errors.firstName ? 'border-red-500' : 'border-brand-200'
+            }`}
           />
           {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
         </div>
@@ -108,7 +151,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.lastName ? 'border-red-500' : 'border-brand-200'}`}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+              errors.lastName ? 'border-red-500' : 'border-brand-200'
+            }`}
           />
           {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
         </div>
@@ -119,7 +164,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.email ? 'border-red-500' : 'border-brand-200'}`}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+              errors.email ? 'border-red-500' : 'border-brand-200'
+            }`}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
@@ -130,7 +177,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.password ? 'border-red-500' : 'border-brand-200'}`}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+              errors.password ? 'border-red-500' : 'border-brand-200'
+            }`}
           />
           {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
         </div>
@@ -142,7 +191,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
               name="phoneNo"
               value={formData.phoneNo}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.phoneNo ? 'border-red-500' : 'border-brand-200'}`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                errors.phoneNo ? 'border-red-500' : 'border-brand-200'
+              }`}
               disabled={isOtpVerified}
             />
             {!isOtpVerified && (
@@ -150,13 +201,14 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
                 type="button"
                 onClick={handleSendOtp}
                 className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg whitespace-nowrap"
-                disabled={isOtpSent}
+                disabled={isOtpSent || !formData.code}
               >
                 {isOtpSent ? 'OTP Sent' : 'Send OTP'}
               </button>
             )}
           </div>
           {errors.phoneNo && <p className="text-red-500 text-xs mt-1">{errors.phoneNo}</p>}
+          {apiError && !isOtpSent && <p className="text-red-500 text-xs mt-1">{apiError}</p>}
         </div>
         {isOtpSent && !isOtpVerified && (
           <div>
@@ -166,7 +218,9 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.otp ? 'border-red-500' : 'border-brand-200'}`}
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                  errors.otp ? 'border-red-500' : 'border-brand-200'
+                }`}
                 placeholder="Enter 6-digit OTP"
               />
               <button
@@ -178,6 +232,7 @@ const RegistrationForm = ({ onRegistrationSuccess }) => {
               </button>
             </div>
             {errors.otp && <p className="text-red-500 text-xs mt-1">{errors.otp}</p>}
+            {apiError && <p className="text-red-500 text-xs mt-1">{apiError}</p>}
           </div>
         )}
       </div>
