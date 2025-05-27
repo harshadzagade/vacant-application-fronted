@@ -2,6 +2,7 @@ const DocumentsUpload = ({ formType, onUpdate }) => {
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files[0]) {
+      console.log(`Selected file for ${name}:`, files[0]); // Debug
       onUpdate({ [name]: files[0] });
     }
   };
@@ -10,102 +11,109 @@ const DocumentsUpload = ({ formType, onUpdate }) => {
     return (
       <div className="space-y-6">
         <div>
-          <label className="block text-brand-700 text-sm font-medium mb-2">Signature Photo</label>
+          <label className="block text-brand-700 text-sm font-medium mb-2">Signature Photo *</label>
           <input
             type="file"
             name="signaturePhoto"
             onChange={handleFileChange}
             className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
-            accept="image/*"
+            accept="image/jpeg,image/png"
           />
         </div>
 
-        {formType === 'mca' && (
+        {formType === 'METICS' && (
           <div>
-            <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card</label>
+            <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card *</label>
             <input
               type="file"
               name="cetScoreCard"
               onChange={handleFileChange}
               className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+              accept="application/pdf,image/jpeg,image/png"
             />
           </div>
         )}
 
-        {formType === 'pharmacyDiploma' && (
+        {formType === 'METIPP' && (
           <>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">FC Verification Copy</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">FC Verification Copy *</label>
               <input
                 type="file"
                 name="fcVerification"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">HSC Marksheet</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">HSC Marksheet *</label>
               <input
                 type="file"
                 name="hscMarksheet"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
           </>
         )}
 
-        {formType === 'pharmacyDegree' && (
+        {formType === 'METIPD' && (
           <>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card *</label>
               <input
                 type="file"
                 name="cetScoreCard"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">HSC Marksheet</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">HSC Marksheet *</label>
               <input
                 type="file"
                 name="hscMarksheet"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">FC Verification Copy</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">FC Verification Copy *</label>
               <input
                 type="file"
                 name="fcVerificationAck"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
           </>
         )}
 
-        {formType === 'iom' && (
+        {formType === 'METIOM' && (
           <>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">CET Score Card *</label>
               <input
                 type="file"
                 name="cetScoreCard"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
-
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2 ">FC Verification Copy</label>
+              <label className="block text-brand-700 text-sm font-medium mb-2">FC Verification Copy *</label>
               <input
                 type="file"
                 name="fcReceipt"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-brand-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition"
+                accept="application/pdf,image/jpeg,image/png"
               />
             </div>
           </>

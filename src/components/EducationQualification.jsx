@@ -1,18 +1,26 @@
 import { useState } from 'react';
 
 const EducationQualification = ({ formType, onUpdate }) => {
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    onUpdate({ [name]: value });
-  };
-
   const [graduationStatus, setGraduationStatus] = useState('');
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const [level, field] = name.split('.');
+    if (level) {
+      onUpdate({
+        [level]: {
+          [field]: value,
+        },
+      });
+    } else {
+      onUpdate({ [name]: value });
+    }
+  };
 
   const renderEducationFields = () => {
     switch (formType) {
-      case 'pharmacyDiploma':
-      case 'pharmacyDegree':
+      case 'METIPP':
+      case 'METIPD':
         return (
           <div className="space-y-6">
             {['hsc'].map((level) => (
@@ -23,7 +31,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Board/University</label>
                     <input
                       type="text"
-                      name={`${level}Board`}
+                      name={`${level}.board`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -32,7 +40,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">School/College</label>
                     <input
                       type="text"
-                      name={`${level}School`}
+                      name={`${level}.school`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -41,7 +49,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Stream</label>
                     <input
                       type="text"
-                      name={`${level}Stream`}
+                      name={`${level}.stream`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -50,7 +58,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Marks Obtained</label>
                     <input
                       type="number"
-                      name={`${level}Marks`}
+                      name={`${level}.marks`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -59,7 +67,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Aggregate %</label>
                     <input
                       type="number"
-                      name={`${level}Percent`}
+                      name={`${level}.percent`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -68,24 +76,38 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
                     <input
                       type="number"
-                      name={`${level}Year`}
+                      name={`${level}.year`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
                   </div>
-                  {/* PCM and PCB marks  */}
                   <div>
                     <label className="block text-brand-700 text-sm font-medium mb-2">PCM Marks</label>
-                    <input type="number" name="pcmMarks" onChange={handleChange} className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" />
+                    <input
+                      type="number"
+                      name={`${level}.pcmMarks`}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                    />
                   </div>
                   <div>
                     <label className="block text-brand-700 text-sm font-medium mb-2">PCB Marks</label>
-                    <input type="number" name="pcbMarks" onChange={handleChange} className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" />
+                    <input
+                      type="number"
+                      name={`${level}.pcbMarks`}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                    />
                   </div>
-                  {formType === 'pharmacyDiploma' && (
+                  {formType === 'METIPP' && (
                     <div>
                       <label className="block text-brand-700 text-sm font-medium mb-2">English Marks</label>
-                      <input type="number" name="englishMarks" onChange={handleChange} className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" />
+                      <input
+                        type="number"
+                        name={`${level}.englishMarks`}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                      />
                     </div>
                   )}
                 </div>
@@ -93,7 +115,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
             ))}
           </div>
         );
-      case 'mca':
+      case 'METICS':
         return (
           <div className="space-y-6">
             {['ssc', 'hsc', 'graduation'].map((level) => (
@@ -104,7 +126,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Board/University</label>
                     <input
                       type="text"
-                      name={`${level}Board`}
+                      name={`${level}.board`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -113,7 +135,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">School/College</label>
                     <input
                       type="text"
-                      name={`${level}School`}
+                      name={`${level}.school`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -122,7 +144,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Stream</label>
                     <input
                       type="text"
-                      name={`${level}Stream`}
+                      name={`${level}.stream`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -131,7 +153,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Marks Obtained</label>
                     <input
                       type="number"
-                      name={`${level}Marks`}
+                      name={`${level}.marks`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -140,7 +162,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Aggregate %</label>
                     <input
                       type="number"
-                      name={`${level}Percent`}
+                      name={`${level}.percent`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -149,7 +171,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
                     <input
                       type="number"
-                      name={`${level}Year`}
+                      name={`${level}.year`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -159,14 +181,13 @@ const EducationQualification = ({ formType, onUpdate }) => {
             ))}
           </div>
         );
-      case 'iom':
+      case 'METIOM':
         return (
           <div className="space-y-6">
             {['hsc', 'graduation'].map((level) => (
               <div key={level} className="border border-brand-100 p-6 rounded-xl bg-brand-50">
                 <h3 className="text-lg font-medium mb-4 text-brand-800">{level.toUpperCase()}</h3>
 
-                {/* Graduation Status Radio Buttons */}
                 {level === 'graduation' && (
                   <div className="mb-4">
                     <span className="block text-brand-700 text-sm font-medium mb-2">Status</span>
@@ -200,7 +221,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Board/University</label>
                     <input
                       type="text"
-                      name={`${level}Board`}
+                      name={`${level}.board`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -209,7 +230,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">School/College</label>
                     <input
                       type="text"
-                      name={`${level}School`}
+                      name={`${level}.school`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -218,7 +239,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Stream</label>
                     <input
                       type="text"
-                      name={`${level}Stream`}
+                      name={`${level}.stream`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -227,7 +248,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Marks Obtained</label>
                     <input
                       type="number"
-                      name={`${level}Marks`}
+                      name={`${level}.marks`}
                       onChange={handleChange}
                       disabled={level === 'graduation' && graduationStatus === 'appearing'}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100"
@@ -237,7 +258,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Aggregate %</label>
                     <input
                       type="number"
-                      name={`${level}Percent`}
+                      name={`${level}.percent`}
                       onChange={handleChange}
                       disabled={level === 'graduation' && graduationStatus === 'appearing'}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100"
@@ -247,7 +268,7 @@ const EducationQualification = ({ formType, onUpdate }) => {
                     <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
                     <input
                       type="number"
-                      name={`${level}Year`}
+                      name={`${level}.year`}
                       onChange={handleChange}
                       className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                     />
@@ -256,7 +277,6 @@ const EducationQualification = ({ formType, onUpdate }) => {
               </div>
             ))}
           </div>
-
         );
       default:
         return null;
