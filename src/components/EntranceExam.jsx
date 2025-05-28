@@ -2,24 +2,26 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 const EntranceExam = ({ formType, onUpdate, errors }) => {
-  const [selectedExam, setSelectedExam] = useState(''); // For iom: track selected exam
+  const [selectedExams, setSelectedExams] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onUpdate({ [name]: value });
   };
 
-  const handleExamSelect = (exam) => {
-    setSelectedExam(exam);
-    // Clear other exam fields to enforce single exam selection for iom
-    const otherExams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'].filter((e) => e !== exam);
-    const clearedData = otherExams.reduce((acc, e) => ({
-      ...acc,
-      [`${e}ApplicationId`]: '',
-      [`${e}Score`]: '',
-      [`${e}ScorePercent`]: '',
-    }), {});
-    onUpdate({ ...clearedData, [`${exam}ApplicationId`]: '', [`${exam}Score`]: '', [`${exam}ScorePercent`]: '' });
+  const handleExamToggle = (exam) => {
+    let updatedExams;
+    if (selectedExams.includes(exam)) {
+      updatedExams = selectedExams.filter((e) => e !== exam);
+      onUpdate({
+        [`${exam}ApplicationId`]: '',
+        [`${exam}Score`]: '',
+        [`${exam}ScorePercent`]: '',
+      });
+    } else {
+      updatedExams = [...selectedExams, exam];
+    }
+    setSelectedExams(updatedExams);
   };
 
   const renderExamFields = () => {
@@ -28,44 +30,34 @@ const EntranceExam = ({ formType, onUpdate, errors }) => {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET Application ID *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Application ID *</label>
               <input
                 type="text"
                 name="cetApplicationId"
                 onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetApplicationId ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET Application ID"
               />
-              {errors.cetApplicationId && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetApplicationId}</p>
-              )}
+              {errors.cetApplicationId && <p className="text-red-600 text-xs mt-1">{errors.cetApplicationId}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET Score *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score *</label>
               <input
                 type="number"
                 name="cetScore"
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetScore ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScore ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET Score"
               />
-              {errors.cetScore && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetScore}</p>
-              )}
+              {errors.cetScore && <p className="text-red-600 text-xs mt-1">{errors.cetScore}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET Percentile (%) *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Percentile (%) *</label>
               <input
                 type="number"
                 name="cetScorePercent"
@@ -73,50 +65,40 @@ const EntranceExam = ({ formType, onUpdate, errors }) => {
                 min="0"
                 max="100"
                 step="0.01"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetScorePercent ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScorePercent ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET Percentile"
               />
-              {errors.cetScorePercent && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetScorePercent}</p>
-              )}
+              {errors.cetScorePercent && <p className="text-red-600 text-xs mt-1">{errors.cetScorePercent}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET-PCB Marks *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET-PCB Marks *</label>
               <input
                 type="number"
                 name="cetPcbMarks"
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetPcbMarks ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetPcbMarks ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET-PCB Marks"
               />
-              {errors.cetPcbMarks && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetPcbMarks}</p>
-              )}
+              {errors.cetPcbMarks && <p className="text-red-600 text-xs mt-1">{errors.cetPcbMarks}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET-PCM Marks *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET-PCM Marks *</label>
               <input
                 type="number"
                 name="cetPcmMarks"
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetPcmMarks ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetPcmMarks ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET-PCM Marks"
               />
-              {errors.cetPcmMarks && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetPcmMarks}</p>
-              )}
+              {errors.cetPcmMarks && <p className="text-red-600 text-xs mt-1">{errors.cetPcmMarks}</p>}
             </div>
           </div>
         );
@@ -124,130 +106,106 @@ const EntranceExam = ({ formType, onUpdate, errors }) => {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                Select Entrance Exam *
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Select Entrance Exams * (Select all that apply)
               </label>
-              <select
-                value={selectedExam}
-                onChange={(e) => handleExamSelect(e.target.value)}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.selectedExam ? 'border-red-500' : 'border-brand-200'
-                }`}
-              >
-                <option value="">Select an exam</option>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'].map((exam) => (
-                  <option key={exam} value={exam}>
-                    {exam.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-              {errors.selectedExam && (
-                <p className="text-red-500 text-xs mt-1">{errors.selectedExam}</p>
-              )}
-            </div>
-            {selectedExam && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border border-brand-100 p-6 rounded-xl bg-brand-50">
-                <div>
-                  <label className="block text-brand-700 text-sm font-medium mb-2">
-                    {selectedExam.toUpperCase()} Application ID *
+                  <label key={exam} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedExams.includes(exam)}
+                      onChange={() => handleExamToggle(exam)}
+                      className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-600 rounded"
+                    />
+                    <span className="text-gray-700">{exam.toUpperCase()}</span>
                   </label>
+                ))}
+              </div>
+              {errors.selectedExam && <p className="text-red-600 text-xs mt-1">{errors.selectedExam}</p>}
+            </div>
+            {selectedExams.map((exam) => (
+              <div key={exam} className="grid grid-cols-1 md:grid-cols-3 gap-6 border border-gray-600 p-6 rounded-xl bg-gray-50 mt-4">
+                <h3 className="text-lg font-medium mb-4 text-gray-800 col-span-full">{exam.toUpperCase()} Details</h3>
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">{exam.toUpperCase()} Application ID *</label>
                   <input
                     type="text"
-                    name={`${selectedExam}ApplicationId`}
+                    name={`${exam}ApplicationId`}
                     onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                      errors[`${selectedExam}ApplicationId`] ? 'border-red-500' : 'border-brand-200'
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}ApplicationId`] ? 'border-red-500' : 'border-gray-600'
                     }`}
-                    placeholder={`Enter ${selectedExam.toUpperCase()} Application ID`}
+                    placeholder={`Enter ${exam.toUpperCase()} Application ID`}
                   />
-                  {errors[`${selectedExam}ApplicationId`] && (
-                    <p className="text-red-500 text-xs mt-1">{errors[`${selectedExam}ApplicationId`]}</p>
-                  )}
+                  {errors[`${exam}ApplicationId`] && <p className="text-red-600 text-xs mt-1">{errors[`${exam}ApplicationId`]}</p>}
                 </div>
                 <div>
-                  <label className="block text-brand-700 text-sm font-medium mb-2">
-                    {selectedExam.toUpperCase()} Score *
-                  </label>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">{exam.toUpperCase()} Score *</label>
                   <input
                     type="number"
-                    name={`${selectedExam}Score`}
+                    name={`${exam}Score`}
                     onChange={handleChange}
                     min="0"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                      errors[`${selectedExam}Score`] ? 'border-red-500' : 'border-brand-200'
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}Score`] ? 'border-red-500' : 'border-gray-600'
                     }`}
-                    placeholder={`Enter ${selectedExam.toUpperCase()} Score`}
+                    placeholder={`Enter ${exam.toUpperCase()} Score`}
                   />
-                  {errors[`${selectedExam}Score`] && (
-                    <p className="text-red-500 text-xs mt-1">{errors[`${selectedExam}Score`]}</p>
-                  )}
+                  {errors[`${exam}Score`] && <p className="text-red-600 text-xs mt-1">{errors[`${exam}Score`]}</p>}
                 </div>
                 <div>
-                  <label className="block text-brand-700 text-sm font-medium mb-2">
-                    {selectedExam.toUpperCase()} Percentile (%) *
-                  </label>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">{exam.toUpperCase()} Percentile (%) *</label>
                   <input
                     type="number"
-                    name={`${selectedExam}ScorePercent`}
+                    name={`${exam}ScorePercent`}
                     onChange={handleChange}
                     min="0"
                     max="100"
                     step="0.01"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                      errors[`${selectedExam}ScorePercent`] ? 'border-red-500' : 'border-brand-200'
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}ScorePercent`] ? 'border-red-500' : 'border-gray-600'
                     }`}
-                    placeholder={`Enter ${selectedExam.toUpperCase()} Percentile`}
+                    placeholder={`Enter ${exam.toUpperCase()} Percentile`}
                   />
-                  {errors[`${selectedExam}ScorePercent`] && (
-                    <p className="text-red-500 text-xs mt-1">{errors[`${selectedExam}ScorePercent`]}</p>
-                  )}
+                  {errors[`${exam}ScorePercent`] && <p className="text-red-600 text-xs mt-1">{errors[`${exam}ScorePercent`]}</p>}
                 </div>
               </div>
-            )}
+            ))}
           </div>
         );
       case 'METICS':
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET Application ID *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Application ID *</label>
               <input
                 type="text"
                 name="cetApplicationId"
                 onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetApplicationId ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET Application ID"
               />
-              {errors.cetApplicationId && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetApplicationId}</p>
-              )}
+              {errors.cetApplicationId && <p className="text-red-600 text-xs mt-1">{errors.cetApplicationId}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                CET Score *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score *</label>
               <input
                 type="number"
                 name="cetScore"
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.cetScore ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScore ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter CET Score"
               />
-              {errors.cetScore && (
-                <p className="text-red-500 text-xs mt-1">{errors.cetScore}</p>
-              )}
+              {errors.cetScore && <p className="text-red-600 text-xs mt-1">{errors.cetScore}</p>}
             </div>
             <div>
-              <label className="block text-brand-700 text-sm font-medium mb-2">
-                Percentile (%) *
-              </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">Percentile (%) *</label>
               <input
                 type="number"
                 name="percentile"
@@ -255,17 +213,15 @@ const EntranceExam = ({ formType, onUpdate, errors }) => {
                 min="0"
                 max="100"
                 step="0.01"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                  errors.percentile ? 'border-red-500' : 'border-brand-200'
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.percentile ? 'border-red-500' : 'border-gray-600'
                 }`}
                 placeholder="Enter Percentile"
               />
-              {errors.percentile && (
-                <p className="text-red-500 text-xs mt-1">{errors.percentile}</p>
-              )}
-            </div>
+            {errors.percentile && <p className="text-red-500 text-xs mt-1">{errors.percentile}</p>}
           </div>
-        );
+        </div>
+      );
       default:
         return null;
     }
@@ -274,7 +230,7 @@ const EntranceExam = ({ formType, onUpdate, errors }) => {
   return (
     <div className="mb-8">
       {formType !== 'METIPP' && (
-        <h2 className="text-2xl font-semibold mb-6 text-brand-900 border-b-2 border-brand-200 pb-2">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-900 font-b-2 border-b-2 border-gray-600 pb-2">
           Entrance Exam Details
         </h2>
       )}

@@ -93,7 +93,7 @@ const RegistrationForm = () => {
     setServerError('');
 
     try {
-      const response = await axios.post('/api/auth/register', {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
         firstName: formData.firstName,
         middleName: formData.middleName,
         lastName: formData.lastName,
@@ -121,7 +121,7 @@ const RegistrationForm = () => {
     setOtp('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await axios.post('http://localhost:5000http://localhost:5000http://localhost:5000/api/auth/register', {
         firstName: formData.firstName,
         middleName: formData.middleName,
         lastName: formData.lastName,
@@ -147,7 +147,7 @@ const RegistrationForm = () => {
     setServerError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+      const response = await axios.post('http://localhost:5000http://localhost:5000http://localhost:5000/api/auth/verify-otp', {
         phoneNo: formData.phoneNo,
         otp,
         firstName: formData.firstName,

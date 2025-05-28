@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import PersonalDetails from './PersonalDetails';
 import EntranceExam from './EntranceExam';
 import EducationQualification from './EducationQualification';
@@ -7,12 +8,14 @@ import DocumentsUpload from './DocumentsUpload';
 
 const ApplicationForm = () => {
   const [formType, setFormType] = useState('');
+  const [applicationId, setApplicationId] = useState(null);
   const [formData, setFormData] = useState({
     personal: {},
     entrance: {},
     education: {},
     documents: {},
   });
+  const [isFinalSubmitted, setIsFinalSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [userData, setUserData] = useState({
     firstName: '',
@@ -22,124 +25,309 @@ const ApplicationForm = () => {
     phoneNo: '',
     institutes: [],
   });
-  const [submissionStatus, setSubmissionStatus] = useState(null);
+  const [submissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch user data on mount
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserDataAndApplication = async () => {
       setIsLoading(true);
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          console.log('No token found in localStorage');
-          setSubmissionStatus({ success: false, message: 'Please log in to continue' });
+          Swal.fire({
+            icon: 'error',
+            title: 'Authentication Error',
+            text: 'Please log in to continue',
+          });
           navigate('/login');
           return;
         }
-        console.log('Fetching user data from /api/auth/user with token:', token);
-        const response = await fetch('/api/auth/user', {
+
+        // Fetch user data
+        const userResponse = await fetch('http://localhost:5000/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Response data:', data);
-        if (data.success) {
-          setUserData(data.user);
-          if (data.user.institutes?.length > 0) {
-            console.log('Setting formType to:', data.user.institutes[0].code);
-            setFormType(data.user.institutes[0].code);
-          } else {
-            console.log('No institutes found in user data');
-            setSubmissionStatus({ success: false, message: 'No institute associated with this account' });
-            navigate('/login');
-          }
-        } else {
-          console.log('Failed to fetch user data:', data.message);
-          setSubmissionStatus({ success: false, message: 'Failed to fetch user data' });
+        if (!userResponse.ok) {
+          const text = await userResponse.text();
+          console.error('User fetch error:', {
+            status: userResponse.status,
+            url: userResponse.url,
+            response: text.slice(0, 200),
+          });
+          throw new Error(`Failed to fetch user data: ${userResponse.status}`);
+        }
+        const userData = await userResponse.json();
+        if (!userData.success) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: userData.message || 'Failed to fetch user data',
+          });
           localStorage.removeItem('token');
           navigate('/login');
+          return;
+        }
+        setUserData(userData.user);
+        if (userData.user.institutes?.length > 0) {
+          setFormType(userData.user.institutes[0].code);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'No Institute',
+            text: 'No institute associated with this account',
+          });
+          navigate('/login');
+          return;
+        }
+
+        // Fetch existing applications
+        const appResponse = await fetch('http://localhost:5000/api/application', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!appResponse.ok) {
+          const text = await appResponse.text();
+          console.error('Applications fetch error:', {
+            status: appResponse.status,
+            url: appResponse.url,
+            response: text.slice(0, 200),
+          });
+          throw new Error(`Failed to fetch applications: ${appResponse.status}`);
+        }
+        const appData = await appResponse.json();
+        if (!appData.success) {
+          throw new Error(appData.message || 'Failed to fetch applications');
+        }
+        if (appData.applications.length > 0) {
+          const application = appData.applications[0];
+          setApplicationId(application.applicationId);
+          // Fetch application details
+          const detailsResponse = await fetch(`http://localhost:5000/api/application/details/${application.applicationId}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (!detailsResponse.ok) {
+            const text = await detailsResponse.text();
+            console.error('Details fetch error:', {
+              status: detailsResponse.status,
+              url: detailsResponse.url,
+              response: text.slice(0, 200),
+            });
+            throw new Error(`Failed to fetch application details: ${detailsResponse.status}`);
+          }
+          const detailsData = await detailsResponse.json();
+          if (detailsData.success) {
+            setFormData({
+              personal: detailsData.application.personal || {},
+              entrance: detailsData.application.entrance || {},
+              education: detailsData.application.education || {},
+              documents: {},
+            });
+            setIsFinalSubmitted(detailsData.application.status === 'final-submitted');
+          } else {
+            throw new Error(detailsData.message || 'Failed to fetch application details');
+          }
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        setSubmissionStatus({ success: false, message: 'Error fetching user data' });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error fetching data: ${error.message}`,
+        });
+        console.error('Fetch error:', error);
         localStorage.removeItem('token');
         navigate('/login');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchUserData();
+    fetchUserDataAndApplication();
   }, [navigate]);
 
   const validateForm = () => {
+    if (!formType) {
+      setErrors({});
+      return false;
+    }
+
     const newErrors = {};
+    const errorMessages = [];
 
-    // Personal Details Validation
-    if (!formData.personal.dob) newErrors.dob = 'Date of birth is required';
-    if (!formData.personal.gender) newErrors.gender = 'Gender is required';
-    if (!formData.personal.fatherMobileNo) newErrors.fatherMobileNo = 'Father mobile number is required';
-    else if (!/^\d{10}$/.test(formData.personal.fatherMobileNo))
+    if (!formData.personal.studentName) {
+      newErrors.studentName = 'Student name is required';
+      errorMessages.push('Student Name');
+    }
+    if (!formData.personal.dob) {
+      newErrors.dob = 'Date of birth is required';
+      errorMessages.push('Date of Birth');
+    }
+    if (!formData.personal.gender) {
+      newErrors.gender = 'Gender is required';
+      errorMessages.push('Gender');
+    }
+    if (!formData.personal.mobileNo) {
+      newErrors.mobileNo = 'Mobile number is required';
+      errorMessages.push('Mobile Number');
+    }
+    if (!formData.personal.fatherMobileNo) {
+      newErrors.fatherMobileNo = 'Father mobile number is required';
+      errorMessages.push('Father Mobile Number');
+    } else if (!/^\d{10}$/.test(formData.personal.fatherMobileNo)) {
       newErrors.fatherMobileNo = 'Father mobile number must be 10 digits';
-    if (!formData.personal.motherMobileNo) newErrors.motherMobileNo = 'Mother mobile number is required';
-    else if (!/^\d{10}$/.test(formData.personal.motherMobileNo))
+      errorMessages.push('Father Mobile Number (must be 10 digits)');
+    }
+    if (!formData.personal.motherMobileNo) {
+      newErrors.motherMobileNo = 'Mother mobile number is required';
+      errorMessages.push('Mother Mobile Number');
+    } else if (!/^\d{10}$/.test(formData.personal.motherMobileNo)) {
       newErrors.motherMobileNo = 'Mother mobile number must be 10 digits';
+      errorMessages.push('Mother Mobile Number (must be 10 digits)');
+    }
+    if (!formData.personal.email) {
+      newErrors.email = 'Email is required';
+      errorMessages.push('Email');
+    }
 
-    // Documents Validation
-    if (!formData.documents.signaturePhoto) newErrors.signaturePhoto = 'Signature photo is required';
+    if (!formData.documents.signaturePhoto && !applicationId) {
+      newErrors.signaturePhoto = 'Signature photo is required';
+      errorMessages.push('Signature Photo');
+    }
 
-    // Form Type Specific Validation
     if (formType === 'METIPP') {
-      if (!formData.documents.hscMarksheet) newErrors.hscMarksheet = 'HSC marksheet is required';
-      if (!formData.documents.fcVerification) newErrors.fcVerification = 'FC verification is required';
-      if (
-        !formData.education.hsc ||
-        !formData.education.hsc.board ||
-        !formData.education.hsc.marks ||
-        !formData.education.hsc.percent ||
-        !formData.education.hsc.englishMarks
-      ) {
-        newErrors.education = 'Complete HSC details (board, marks, percentage, English marks) are required';
+      if (!formData.documents.hscMarksheet && !applicationId) {
+        newErrors.hscMarksheet = 'HSC marksheet is required';
+        errorMessages.push('HSC Marksheet');
+      }
+      if (!formData.documents.fcVerification && !applicationId) {
+        newErrors.fcVerification = 'FC verification is required';
+        errorMessages.push('FC Verification');
+      }
+      if (!formData.education.hsc) {
+        newErrors['hsc.board'] = 'HSC Board is required';
+        newErrors['hsc.marks'] = 'HSC Marks is required';
+        newErrors['hsc.percent'] = 'HSC Percentage is required';
+        newErrors['hsc.englishMarks'] = 'HSC English Marks is required';
+        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage', 'HSC English Marks');
+      } else {
+        if (!formData.education.hsc.board) {
+          newErrors['hsc.board'] = 'HSC Board is required';
+          errorMessages.push('HSC Board');
+        }
+        if (!formData.education.hsc.marks) {
+          newErrors['hsc.marks'] = 'HSC Marks is required';
+          errorMessages.push('HSC Marks');
+        }
+        if (!formData.education.hsc.percent) {
+          newErrors['hsc.percent'] = 'HSC Percentage is required';
+          errorMessages.push('HSC Percentage');
+        }
+        if (!formData.education.hsc.englishMarks){
+          newErrors['hsc.englishMarks'] = 'HSC English Marks is required';
+          errorMessages.push('HSC English Marks');
+        }
       }
     }
 
     if (formType === 'METIPD') {
-      if (!formData.documents.hscMarksheet) newErrors.hscMarksheet = 'HSC marksheet is required';
-      if (!formData.documents.cetScoreCard) newErrors.cetScoreCard = 'CET score card is required';
-      if (!formData.documents.fcVerificationAck) newErrors.fcVerificationAck = 'FC verification acknowledgment is required';
-      if (
-        !formData.education.hsc ||
-        !formData.education.hsc.board ||
-        !formData.education.hsc.marks ||
-        !formData.education.hsc.percent
-      ) {
-        newErrors.education = 'Complete HSC details (board, marks, percentage) are required';
+      if (!formData.documents.hscMarksheet && !applicationId) {
+        newErrors.hscMarksheet = 'HSC marksheet is required';
+        errorMessages.push('HSC Marksheet');
       }
-      if (!formData.entrance.cetApplicationId) newErrors.cetApplicationId = 'CET Application ID is required';
-      if (!formData.entrance.cetScore) newErrors.cetScore = 'CET Score is required';
-      else if (formData.entrance.cetScore < 0) newErrors.cetScore = 'CET Score cannot be negative';
-      if (!formData.entrance.cetScorePercent) newErrors.cetScorePercent = 'CET Percentile is required';
-      else if (formData.entrance.cetScorePercent < 0 || formData.entrance.cetScorePercent > 100)
+      if (!formData.documents.cetScoreCard && !applicationId) {
+        newErrors.cetScoreCard = 'CET score card is required';
+        errorMessages.push('CET Score Card');
+      }
+      if (!formData.documents.fcVerificationAck && !applicationId) {
+        newErrors.fcVerificationAck = 'FC verification acknowledgment is required';
+        errorMessages.push('FC Verification Acknowledgment');
+      }
+      if (!formData.education.hsc) {
+        newErrors['hsc.board'] = 'HSC Board is required';
+        newErrors['hsc.marks'] = 'HSC Marks are required';
+        newErrors['hsc.percent'] = 'HSC Percentage is required';
+        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
+      } else {
+        if (!formData.education.hsc.board) {
+          newErrors['hsc.board'] = 'HSC Board is required';
+          errorMessages.push('HSC Board');
+        }
+        if (!formData.education.hsc.marks) {
+          newErrors['hsc.marks'] = 'HSC Marks is required';
+          errorMessages.push('HSC Marks');
+        }
+        if (!formData.education.hsc.percent) {
+          newErrors['hsc.percent'] = 'HSC Percentage is required';
+          errorMessages.push('HSC Percentage');
+        }
+      }
+      if (!formData.entrance.cetApplicationId) {
+        newErrors.cetApplicationId = 'CET Application ID is required';
+        errorMessages.push('CET Application ID');
+      }
+      if (!formData.entrance.cetScore) {
+        newErrors.cetScore = 'CET Score is required';
+        errorMessages.push('CET Score');
+      } else if (formData.entrance.cetScore < 0) {
+        newErrors.cetScore = 'CET Score cannot be negative';
+        errorMessages.push('CET Score (cannot be negative)');
+      }
+      if (!formData.entrance.cetScorePercent) {
+        newErrors.cetScorePercent = 'CET Percentile is required';
+        errorMessages.push('CET Percentile');
+      } else if (formData.entrance.cetScorePercent < 0 || formData.entrance.cetScorePercent > 100) {
         newErrors.cetScorePercent = 'CET Percentile must be between 0 and 100';
-      if (!formData.entrance.cetPcbMarks) newErrors.cetPcbMarks = 'CET-PCB Marks are required';
-      else if (formData.entrance.cetPcbMarks < 0) newErrors.cetPcbMarks = 'CET-PCB Marks cannot be negative';
-      if (!formData.entrance.cetPcmMarks) newErrors.cetPcmMarks = 'CET-PCM Marks are required';
-      else if (formData.entrance.cetPcmMarks < 0) newErrors.cetPcmMarks = 'CET-PCM Marks cannot be negative';
+        errorMessages.push('CET Percentile (must be between 0 and 100)');
+      }
+      if (!formData.entrance.cetPcbMarks) {
+        newErrors.cetPcbMarks = 'CET-PCB Marks are required';
+        errorMessages.push('CET-PCB Marks');
+      } else if (formData.entrance.cetPcbMarks < 0) {
+        newErrors.cetPcbMarks = 'CET-PCB Marks cannot be negative';
+        errorMessages.push('CET-PCB Marks (cannot be negative)');
+      }
+      if (!formData.entrance.cetPcmMarks) {
+        newErrors.cetPcmMarks = 'CET-PCM Marks are required';
+        errorMessages.push('CET-PCM Marks');
+      } else if (formData.entrance.cetPcmMarks < 0) {
+        newErrors.cetPcmMarks = 'CET-PCM Marks cannot be negative';
+        errorMessages.push('CET-PCM Marks (cannot be negative)');
+      }
     }
 
     if (formType === 'METIOM') {
-      if (!formData.documents.cetScoreCard) newErrors.cetScoreCard = 'CET score card is required';
-      if (!formData.documents.fcReceipt) newErrors.fcReceipt = 'FC receipt is required';
-      if (
-        !formData.education.hsc ||
-        !formData.education.hsc.board ||
-        !formData.education.hsc.marks ||
-        !formData.education.hsc.percent ||
-        !formData.education.graduation ||
-        !formData.education.graduation.board
-      ) {
-        newErrors.education = 'Complete HSC and graduation details (board, marks, percentage) are required';
+      if (!formData.documents.cetScoreCard && !applicationId) {
+        newErrors.cetScoreCard = 'CET score card is required';
+        errorMessages.push('CET Score Card');
+      }
+      if (!formData.documents.fcReceipt && !applicationId) {
+        newErrors.fcReceipt = 'FC receipt is required';
+        errorMessages.push('FC Receipt');
+      }
+      if (!formData.education.hsc) {
+        newErrors['hsc.board'] = 'HSC Board is required';
+        newErrors['hsc.marks'] = 'HSC Marks is required';
+        newErrors['hsc.percent'] = 'HSC Percentage is required';
+        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
+      } else {
+        if (!formData.education.hsc.board) {
+          newErrors['hsc.board'] = 'HSC Board is required';
+          errorMessages.push('HSC Board');
+        }
+        if (!formData.education.hsc.marks) {
+          newErrors['hsc.marks'] = 'HSC Marks is required';
+          errorMessages.push('HSC Marks');
+        }
+        if (!formData.education.hsc.percent) {
+          newErrors['hsc.percent'] = 'HSC Percentage is required';
+          errorMessages.push('HSC Percentage');
+        }
+      }
+      if (!formData.education.graduation) {
+        newErrors['graduation.board'] = 'Graduation Board is required';
+        errorMessages.push('Graduation Board');
+      } else if (!formData.education.graduation.board) {
+        newErrors['graduation.board'] = 'Graduation Board is required';
+        errorMessages.push('Graduation Board');
       }
       const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
       const hasExamData = exams.some(
@@ -148,52 +336,114 @@ const ApplicationForm = () => {
           formData.entrance[`${exam}Score`] &&
           formData.entrance[`${exam}ScorePercent`]
       );
-      if (!hasExamData) newErrors.selectedExam = 'At least one entrance exam with complete details is required';
+      if (!hasExamData) {
+        newErrors.selectedExam = 'At least one entrance exam with complete details is required';
+        errorMessages.push('At least one Entrance Exam (Application ID, Score, Percentile)');
+      }
       exams.forEach((exam) => {
-        if (formData.entrance[`${exam}ApplicationId`]) {
-          if (!formData.entrance[`${exam}Score`]) newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score is required`;
-          else if (formData.entrance[`${exam}Score`] < 0)
+        if (
+          formData.entrance[`${exam}ApplicationId`] ||
+          formData.entrance[`${exam}Score`] ||
+          formData.entrance[`${exam}ScorePercent`]
+        ) {
+          if (!formData.entrance[`${exam}ApplicationId`]) {
+            newErrors[`${exam}ApplicationId`] = `${exam.toUpperCase()} Application ID is required`;
+            errorMessages.push(`${exam.toUpperCase()} Application ID`);
+          }
+          if (!formData.entrance[`${exam}Score`]) {
+            newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score is required`;
+            errorMessages.push(`${exam.toUpperCase()} Score`);
+          } else if (formData.entrance[`${exam}Score`] < 0) {
             newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score cannot be negative`;
-          if (!formData.entrance[`${exam}ScorePercent`])
+            errorMessages.push(`${exam.toUpperCase()} Score (cannot be negative)`);
+          }
+          if (!formData.entrance[`${exam}ScorePercent`]) {
             newErrors[`${exam}ScorePercent`] = `${exam.toUpperCase()} Percentile is required`;
-          else if (formData.entrance[`${exam}ScorePercent`] < 0 || formData.entrance[`${exam}ScorePercent`] > 100)
+            errorMessages.push(`${exam.toUpperCase()} Percentile`);
+          } else if (formData.entrance[`${exam}ScorePercent`] < 0 || formData.entrance[`${exam}ScorePercent`] > 100) {
             newErrors[`${exam}ScorePercent`] = `${exam.toUpperCase()} Percentile must be between 0 and 100`;
+            errorMessages.push(`${exam.toUpperCase()} Percentile (must be between 0 and 100)`);
+          }
         }
       });
     }
 
     if (formType === 'METICS') {
-      if (!formData.documents.cetScoreCard) newErrors.cetScoreCard = 'CET score card is required';
-      if (
-        !formData.education.ssc ||
-        !formData.education.ssc.board ||
-        !formData.education.ssc.marks ||
-        !formData.education.ssc.percent ||
-        !formData.education.hsc ||
-        !formData.education.hsc.board ||
-        !formData.education.hsc.marks ||
-        !formData.education.hsc.percent ||
-        !formData.education.graduation ||
-        !formData.education.graduation.board
-      ) {
-        newErrors.education = 'Complete SSC, HSC, and graduation details (board, marks, percentage) are required';
+      if (!formData.documents.cetScoreCard && !applicationId) {
+        newErrors.cetScoreCard = 'CET score card is required';
+        errorMessages.push('CET Score Card');
       }
-      if (!formData.entrance.cetApplicationId) newErrors.cetApplicationId = 'CET Application ID is required';
-      if (!formData.entrance.cetScore) newErrors.cetScore = 'CET Score is required';
-      else if (formData.entrance.cetScore < 0) newErrors.cetScore = 'CET Score cannot be negative';
-      if (!formData.entrance.percentile) newErrors.percentile = 'Percentile is required';
-      else if (formData.entrance.percentile < 0 || formData.entrance.percentile > 100)
+      ['ssc', 'hsc', 'graduation'].forEach((level) => {
+        if (!formData.education[level]) {
+          newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
+          newErrors[`${level}.marks`] = `${level.toUpperCase()} Marks is required`;
+          newErrors[`${level}.percent`] = `${level.toUpperCase()} Percentage is required`;
+          errorMessages.push(`${level.toUpperCase()} Board`, `${level.toUpperCase()} Marks`, `${level.toUpperCase()} Percentage`);
+        } else {
+          if (!formData.education[level].board) {
+            newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
+            errorMessages.push(`${level.toUpperCase()} Board`);
+          }
+          if (!formData.education[level].marks) {
+            newErrors[`${level}.marks`] = `${level.toUpperCase()} Marks is required`;
+            errorMessages.push(`${level.toUpperCase()} Marks`);
+          }
+          if (!formData.education[level].percent) {
+            newErrors[`${level}.percent`] = `${level.toUpperCase()} Percentage is required`;
+            errorMessages.push(`${level.toUpperCase()} Percentage`);
+          }
+        }
+      });
+      if (!formData.entrance.cetApplicationId) {
+        newErrors.cetApplicationId = 'CET Application ID is required';
+        errorMessages.push('CET Application ID');
+      }
+      if (!formData.entrance.cetScore) {
+        newErrors.cetScore = 'CET Score is required';
+        errorMessages.push('CET Score');
+      } else if (formData.entrance.cetScore < 0) {
+        newErrors.cetScore = 'CET Score cannot be negative';
+        errorMessages.push('CET Score (cannot be negative)');
+      }
+      if (!formData.entrance.percentile) {
+        newErrors.percentile = 'Percentile is required';
+        errorMessages.push('Percentile');
+      } else if (formData.entrance.percentile < 0 || formData.entrance.percentile > 100) {
         newErrors.percentile = 'Percentile must be between 0 and 100';
+        errorMessages.push('Percentile (must be between 0 and 100)');
+      }
     }
 
     setErrors(newErrors);
+    if (errorMessages.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: `Please fill or correct the following required fields: ${errorMessages.join(', ')}`,
+      });
+    }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
+    if (!formType) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Form type is not set. Please try again.',
+      });
+      return;
+    }
     if (!validateForm()) {
-      setSubmissionStatus({ success: false, message: 'Please fill all required fields' });
+      return;
+    }
+    if (isFinal && !termsAgreed) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Terms Agreement',
+        text: 'You must agree to the terms before final submission.',
+      });
       return;
     }
 
@@ -207,56 +457,131 @@ const ApplicationForm = () => {
         formDataToSend.append(key, formData.documents[key]);
       }
     });
-
-    console.log('Submitting FormData:');
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(`${key}:`, value);
+    if (isFinal) {
+      formDataToSend.append('isFinalSubmitted', true);
     }
 
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.log('No token found for submission');
-        setSubmissionStatus({ success: false, message: 'Please log in to continue' });
+        Swal.fire({
+          icon: 'error',
+          title: 'Authentication Error',
+          text: 'Please log in to continue',
+        });
         navigate('/login');
         return;
       }
-      console.log('Submitting to /api/application/submit with token:', token);
-      const response = await fetch('/api/application/submit', {
-        method: 'POST',
+
+      const url = applicationId ? `http://localhost:5000/api/application/update/${applicationId}` : 'http://localhost:5000/api/application/submit';
+      const method = applicationId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Authorization': `Bearer ${token}` },
         body: formDataToSend,
       });
-      console.log('Submission response status:', response.status);
-      const data = await response.json();
-      console.log('Submission response data:', data);
-      if (data.success) {
-        setSubmissionStatus({
-          success: true,
-          message: `Application submitted successfully! Application No: ${data.applicationNo}`,
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Submit fetch error:', {
+          status: response.status,
+          url: response.url,
+          response: text.slice(0, 200),
         });
-        setFormData({ personal: {}, entrance: {}, education: {}, documents: {} });
+        throw new Error(`Failed to ${applicationId ? 'update' : 'submit'} application: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        if (!applicationId) {
+          setApplicationId(data.applicationId || data.applicationNo);
+        }
+        setIsFinalSubmitted(isFinal || data.status === 'final-submitted');
+        Swal.fire({
+          icon: 'success',
+          title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
+          text: isFinal
+            ? 'Your application has been finally submitted and can no longer be edited.'
+            : `Application ${applicationId ? 'updated' : 'submitted'} successfully! Application No: ${data.applicationNo || data.applicationId}`,
+        });
+        if (!isFinal) {
+          setFormData({ personal: {}, entrance: {}, education: {}, documents: {} });
+        }
       } else {
-        setSubmissionStatus({ success: false, message: data.message });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.message || 'Failed to process application',
+        });
       }
     } catch (error) {
-      console.error('Submission error:', error);
-      setSubmissionStatus({ success: false, message: 'Error submitting application' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error submitting application: ${error.message}`,
+      });
+      console.error('Submit error:', error);
+    }
+  };
+
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    const result = await Swal.fire({
+      title: 'Confirm Final Submission',
+      text: 'Once you submit finally, you cannot make further changes to your application. Are you sure?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Submit',
+      cancelButtonText: 'Cancel',
+    });
+    if (result.isConfirmed) {
+      handleSubmit(e, true);
     }
   };
 
   const handleLogout = () => {
-    console.log('Logging out, clearing localStorage');
     localStorage.clear();
+    Swal.fire({
+      icon: 'success',
+      title: 'Logged Out',
+      text: 'You have been logged out successfully.',
+      timer: 1500,
+      showConfirmButton: false,
+    });
     navigate('/login');
   };
 
   const updateFormData = useCallback((section, data) => {
-    console.log(`Updating ${section}:`, data);
-    setFormData((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], ...data },
-    }));
+    setFormData((prev) => {
+      if (section === 'education') {
+        const updatedEducation = {};
+        Object.keys(data).forEach((level) => {
+          updatedEducation[level] = {
+            ...prev[section][level] || {},
+            ...data[level],
+          };
+        });
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            ...updatedEducation,
+          },
+        };
+      }
+      if (section === 'entrance') {
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            ...data,
+          },
+        };
+      }
+      return {
+        ...prev,
+        [section]: { ...prev[section], ...data },
+      };
+    });
   }, []);
 
   const formTypeNames = {
@@ -289,36 +614,73 @@ const ApplicationForm = () => {
       {isLoading ? (
         <div>Loading application form...</div>
       ) : formType ? (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={isFinalSubmitted ? null : applicationId ? handleSubmit : handleSubmit}>
           <PersonalDetails
             formType={formType}
             onUpdate={(data) => updateFormData('personal', data)}
             errors={errors}
             userData={userData}
+            disabled={isFinalSubmitted}
           />
           <EntranceExam
             formType={formType}
             onUpdate={(data) => updateFormData('entrance', data)}
             errors={errors}
+            disabled={isFinalSubmitted}
           />
           <EducationQualification
             formType={formType}
             onUpdate={(data) => updateFormData('education', data)}
             errors={errors}
+            disabled={isFinalSubmitted}
           />
           <DocumentsUpload
             formType={formType}
             onUpdate={(data) => updateFormData('documents', data)}
             errors={errors}
+            disabled={isFinalSubmitted}
           />
-          <div className="mt-8">
-            <button
-              type="submit"
-              className="w-full mt-6 p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
-            >
-              Submit Application
-            </button>
-          </div>
+          {!isFinalSubmitted && (
+            <div className="mt-8">
+              {applicationId && (
+                <>
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAgreed}
+                      onChange={(e) => setTermsAgreed(e.target.checked)}
+                      className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
+                      disabled={isFinalSubmitted}
+                    />
+                    <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
+                      I agree that the information I filled is correct and complete.
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleFinalSubmit}
+                    className="w-full mt-6 p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
+                    disabled={!termsAgreed || isFinalSubmitted}
+                  >
+                    Final Submit
+                  </button>
+                </>
+              )}
+              <button
+                type="submit"
+                className="w-full mt-6 p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
+                disabled={isFinalSubmitted}
+              >
+                {applicationId ? 'Update Application' : 'Submit Application'}
+              </button>
+            </div>
+          )}
+          {isFinalSubmitted && (
+            <div className="mt-8 p-4 bg-yellow-100 text-yellow-700 rounded-lg">
+              This application has been finally submitted and cannot be edited.
+            </div>
+          )}
         </form>
       ) : (
         <div>No application form available</div>
