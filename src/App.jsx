@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
 import LoginForm from './components/LoginForm';
 import ApplicationForm from './components/ApplicationForm';
+import SubmissionConfirmation from './components/SubmissionConfirmation';
+import ViewApplication from './components/ViewApplication';
 
 // ProtectedRoute component to guard /application
 const ProtectedRoute = ({ children }) => {
@@ -23,6 +25,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ApplicationForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/submission-confirmation/:applicationId"
+              element={
+                <ProtectedRoute>
+                  <SubmissionConfirmation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/view-application/:applicationId"
+              element={
+                <ProtectedRoute>
+                  <ViewApplication />
                 </ProtectedRoute>
               }
             />

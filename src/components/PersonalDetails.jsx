@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 
-const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
+const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, disabled }) => {
   const [formValues, setFormValues] = useState({
     studentName: '',
     dob: '',
@@ -15,37 +16,59 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
     stateMeritNo: '',
     address: '',
   });
-
-  // Initialize form values with userData
-  const onUpdateRef = useRef(onUpdate);
+  const lastSyncedValues = useRef(null);
 
   useEffect(() => {
-    if (!userData) return; // Don't initialize if userData not available yet
-
     const initialValues = {
       studentName: `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim(),
-      dob: '',
-      gender: '',
+      dob: initialData.dob ? new Date(initialData.dob).toISOString().split('T')[0] : '',
+      gender: initialData.gender || '',
       mobileNo: userData.phoneNo || '',
-      fatherMobileNo: '',
-      motherMobileNo: '',
-      motherName: '',
-      fatherName: '',
+      fatherMobileNo: initialData.fatherMobileNo || '',
+      motherMobileNo: initialData.motherMobileNo || '',
+      motherName: initialData.motherName || '',
+      fatherName: initialData.fatherName || '',
       email: userData.email || '',
-      allIndiaMeritNo: '',
-      stateMeritNo: '',
-      address: '',
+      allIndiaMeritNo: initialData.allIndiaMeritNo || '',
+      stateMeritNo: initialData.stateMeritNo || '',
+      address: initialData.address || '',
     };
 
-    setFormValues(initialValues);
-    onUpdateRef.current(initialValues);
-  }, [userData]);
+    // Update formValues if different
+    if (JSON.stringify(initialValues) !== JSON.stringify(formValues)) {
+      setFormValues(initialValues);
+    }
+
+    // Always sync read-only fields from userData to ensure formData.personal is populated
+    const readOnlyFields = {
+      studentName: initialValues.studentName,
+      mobileNo: initialValues.mobileNo,
+      email: initialValues.email,
+    };
+    if (JSON.stringify(readOnlyFields) !== JSON.stringify({
+      studentName: lastSyncedValues.current?.studentName,
+      mobileNo: lastSyncedValues.current?.mobileNo,
+      email: lastSyncedValues.current?.email,
+    })) {
+      onUpdate(initialValues);
+      lastSyncedValues.current = initialValues;
+    } else if (JSON.stringify(initialValues) !== JSON.stringify(lastSyncedValues.current)) {
+      onUpdate(initialValues);
+      lastSyncedValues.current = initialValues;
+    }
+  }, [userData, initialData, onUpdate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updatedValues = { ...formValues, [name]: value };
-    setFormValues(updatedValues);
-    onUpdate(updatedValues);
+    setFormValues((prev) => {
+      const updatedValues = { ...prev, [name]: value };
+      // Sync with parent only if changes are significant
+      if (JSON.stringify(updatedValues) !== JSON.stringify(lastSyncedValues.current)) {
+        onUpdate(updatedValues);
+        lastSyncedValues.current = updatedValues;
+      }
+      return updatedValues;
+    });
   };
 
   const renderPersonalFields = () => {
@@ -62,10 +85,11 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               name="studentName"
               value={formValues.studentName}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled text-gray-500 bg-gray-100 ${
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
                 errors.studentName ? 'border-red-500' : 'border-brand-200'
               }`}
               readOnly
+              disabled={true}
             />
             {errors.studentName && <p className="text-red-500 text-xs mt-1">{errors.studentName}</p>}
           </div>
@@ -79,6 +103,7 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
                 errors.dob ? 'border-red-500' : 'border-brand-200'
               }`}
+              disabled={disabled}
             />
             {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
           </div>
@@ -91,6 +116,7 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
                 errors.gender ? 'border-red-500' : 'border-brand-200'
               }`}
+              disabled={disabled}
             >
               <option value="">Select Gender</option>
               <option value="male">Male</option>
@@ -106,10 +132,11 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               name="mobileNo"
               value={formValues.mobileNo}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled text-gray-500 bg-gray-100 ${
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
                 errors.mobileNo ? 'border-red-500' : 'border-brand-200'
               }`}
               readOnly
+              disabled={true}
             />
             {errors.mobileNo && <p className="text-red-500 text-xs mt-1">{errors.mobileNo}</p>}
           </div>
@@ -123,6 +150,7 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
                 errors.fatherMobileNo ? 'border-red-500' : 'border-brand-200'
               }`}
+              disabled={disabled}
             />
             {errors.fatherMobileNo && <p className="text-red-500 text-xs mt-1">{errors.fatherMobileNo}</p>}
           </div>
@@ -136,6 +164,7 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
                 errors.motherMobileNo ? 'border-red-500' : 'border-brand-200'
               }`}
+              disabled={disabled}
             />
             {errors.motherMobileNo && <p className="text-red-500 text-xs mt-1">{errors.motherMobileNo}</p>}
           </div>
@@ -146,7 +175,10 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               name="motherName"
               value={formValues.motherName}
               onChange={handleChange}
-              className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                errors.motherName ? 'border-red-500' : 'border-brand-200'
+              }`}
+              disabled={disabled}
             />
           </div>
           <div>
@@ -156,7 +188,10 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               name="fatherName"
               value={formValues.fatherName}
               onChange={handleChange}
-              className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                errors.fatherName ? 'border-red-500' : 'border-brand-200'
+              }`}
+              disabled={disabled}
             />
           </div>
           <div>
@@ -166,10 +201,11 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
               name="email"
               value={formValues.email}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled text-gray-500 bg-gray-100 ${
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
                 errors.email ? 'border-red-500' : 'border-brand-200'
               }`}
               readOnly
+              disabled={true}
             />
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
@@ -182,7 +218,10 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
                   name="allIndiaMeritNo"
                   value={formValues.allIndiaMeritNo}
                   onChange={handleChange}
-                  className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                    errors.allIndiaMeritNo ? 'border-red-500' : 'border-brand-200'
+                  }`}
+                  disabled={disabled}
                 />
               </div>
               <div>
@@ -192,7 +231,10 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
                   name="stateMeritNo"
                   value={formValues.stateMeritNo}
                   onChange={handleChange}
-                  className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                    errors.stateMeritNo ? 'border-red-500' : 'border-brand-200'
+                  }`}
+                  disabled={disabled}
                 />
               </div>
             </>
@@ -204,8 +246,11 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
             name="address"
             value={formValues.address}
             onChange={handleChange}
-            className="w-full p-3 border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition ${
+              errors.address ? 'border-red-500' : 'border-blue-200'
+            }`}
             rows="4"
+            disabled={disabled}
           ></textarea>
         </div>
       </div>
@@ -213,6 +258,22 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData }) => {
   };
 
   return <div className="mb-8">{renderPersonalFields()}</div>;
+};
+
+PersonalDetails.propTypes = {
+  formType: PropTypes.string.isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  errors: PropTypes.object,
+  userData: PropTypes.object,
+  initialData: PropTypes.object,
+  disabled: PropTypes.bool,
+};
+
+PersonalDetails.defaultProps = {
+  errors: {},
+  userData: {},
+  initialData: {},
+  disabled: false,
 };
 
 export default PersonalDetails;

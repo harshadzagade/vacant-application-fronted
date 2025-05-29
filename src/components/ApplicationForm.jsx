@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import PersonalDetails from './PersonalDetails';
@@ -30,6 +30,12 @@ const ApplicationForm = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const navigate = useNavigate();
 
+  // Memoize formData sections to stabilize references
+  const personalData = useMemo(() => formData.personal, [formData.personal]);
+  const entranceData = useMemo(() => formData.entrance, [formData.entrance]);
+  const educationData = useMemo(() => formData.education, [formData.education]);
+  const documentsData = useMemo(() => formData.documents, [formData.documents]);
+
   useEffect(() => {
     const fetchUserDataAndApplication = async () => {
       setIsLoading(true);
@@ -58,20 +64,21 @@ const ApplicationForm = () => {
           });
           throw new Error(`Failed to fetch user data: ${userResponse.status}`);
         }
-        const userData = await userResponse.json();
-        if (!userData.success) {
+        const userDataResponse = await userResponse.json();
+        if (!userDataResponse.success) {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: userData.message || 'Failed to fetch user data',
+            text: userDataResponse.message || 'Failed to fetch user data',
           });
           localStorage.removeItem('token');
           navigate('/login');
           return;
         }
-        setUserData(userData.user);
-        if (userData.user.institutes?.length > 0) {
-          setFormType(userData.user.institutes[0].code);
+        const user = userDataResponse.user;
+        setUserData(user);
+        if (user.institutes?.length > 0) {
+          setFormType(user.institutes[0].code);
         } else {
           Swal.fire({
             icon: 'error',
@@ -81,6 +88,17 @@ const ApplicationForm = () => {
           navigate('/login');
           return;
         }
+
+        // Initialize personal data with user data
+        setFormData((prev) => ({
+          ...prev,
+          personal: {
+            ...prev.personal,
+            studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
+            mobileNo: user.phoneNo || '',
+            email: user.email || '',
+          },
+        }));
 
         // Fetch existing applications
         const appResponse = await fetch('http://localhost:5000/api/application', {
@@ -117,12 +135,18 @@ const ApplicationForm = () => {
           }
           const detailsData = await detailsResponse.json();
           if (detailsData.success) {
-            setFormData({
-              personal: detailsData.application.personal || {},
+            setFormData((prev) => ({
+              personal: {
+                ...prev.personal,
+                ...detailsData.application.personal,
+                studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
+                mobileNo: user.phoneNo || '',
+                email: user.email || '',
+              },
               entrance: detailsData.application.entrance || {},
               education: detailsData.application.education || {},
-              documents: {},
-            });
+              documents: detailsData.application.documents || {},
+            }));
             setIsFinalSubmitted(detailsData.application.status === 'final-submitted');
           } else {
             throw new Error(detailsData.message || 'Failed to fetch application details');
@@ -153,7 +177,8 @@ const ApplicationForm = () => {
     const newErrors = {};
     const errorMessages = [];
 
-    if (!formData.personal.studentName) {
+    // Validate personal fields, using userData as fallback for read-only fields
+    if (!formData.personal.studentName && !userData.firstName && !userData.lastName) {
       newErrors.studentName = 'Student name is required';
       errorMessages.push('Student Name');
     }
@@ -165,7 +190,7 @@ const ApplicationForm = () => {
       newErrors.gender = 'Gender is required';
       errorMessages.push('Gender');
     }
-    if (!formData.personal.mobileNo) {
+    if (!formData.personal.mobileNo && !userData.phoneNo) {
       newErrors.mobileNo = 'Mobile number is required';
       errorMessages.push('Mobile Number');
     }
@@ -183,7 +208,7 @@ const ApplicationForm = () => {
       newErrors.motherMobileNo = 'Mother mobile number must be 10 digits';
       errorMessages.push('Mother Mobile Number (must be 10 digits)');
     }
-    if (!formData.personal.email) {
+    if (!formData.personal.email && !userData.email) {
       newErrors.email = 'Email is required';
       errorMessages.push('Email');
     }
@@ -221,7 +246,7 @@ const ApplicationForm = () => {
           newErrors['hsc.percent'] = 'HSC Percentage is required';
           errorMessages.push('HSC Percentage');
         }
-        if (!formData.education.hsc.englishMarks){
+        if (!formData.education.hsc.englishMarks) {
           newErrors['hsc.englishMarks'] = 'HSC English Marks is required';
           errorMessages.push('HSC English Marks');
         }
@@ -419,7 +444,7 @@ const ApplicationForm = () => {
       Swal.fire({
         icon: 'error',
         title: 'Validation Error',
-        text: `Please fill or correct the following required fields: ${errorMessages.join(', ')}`,
+        text: `Please verify or correct the following required fields: ${errorMessages.join(', ')}`,
       });
     }
     return Object.keys(newErrors).length === 0;
@@ -428,22 +453,12 @@ const ApplicationForm = () => {
   const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
     if (!formType) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Form type is not set. Please try again.',
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Form type is not set.' });
       return;
     }
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     if (isFinal && !termsAgreed) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Terms Agreement',
-        text: 'You must agree to the terms before final submission.',
-      });
+      Swal.fire({ icon: 'warning', title: 'Terms Agreement', text: 'You must agree to the terms.' });
       return;
     }
 
@@ -452,23 +467,19 @@ const ApplicationForm = () => {
     formDataToSend.append('personal', JSON.stringify(formData.personal));
     formDataToSend.append('entrance', JSON.stringify(formData.entrance || {}));
     formDataToSend.append('education', JSON.stringify(formData.education));
-    Object.keys(formData.documents).forEach((key) => {
-      if (formData.documents[key]) {
-        formDataToSend.append(key, formData.documents[key]);
-      }
+    Object.entries(formData.documents).forEach(([key, value]) => {
+      if (value && typeof value !== 'string') formDataToSend.append(key, value);
     });
-    if (isFinal) {
-      formDataToSend.append('isFinalSubmitted', true);
-    }
+    formDataToSend.append('isFinalSubmitted', isFinal); // Match backend expectation
+    console.log('FormData sent:', {
+      formType: formDataToSend.get('formType'),
+      isFinalSubmitted: formDataToSend.get('isFinalSubmitted'),
+    }); // Debug log
 
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Authentication Error',
-          text: 'Please log in to continue',
-        });
+        Swal.fire({ icon: 'error', title: 'Authentication Error', text: 'Please log in.' });
         navigate('/login');
         return;
       }
@@ -483,43 +494,34 @@ const ApplicationForm = () => {
       });
       if (!response.ok) {
         const text = await response.text();
-        console.error('Submit fetch error:', {
-          status: response.status,
-          url: response.url,
-          response: text.slice(0, 200),
-        });
-        throw new Error(`Failed to ${applicationId ? 'update' : 'submit'} application: ${response.status}`);
+        throw new Error(`Failed to ${applicationId ? 'update' : 'submit'} application: ${text}`);
       }
       const data = await response.json();
+
       if (data.success) {
-        if (!applicationId) {
-          setApplicationId(data.applicationId || data.applicationNo);
+        const newApplicationId = data.application?.applicationId;
+        if (!newApplicationId) {
+          throw new Error('No application ID returned from server');
         }
-        setIsFinalSubmitted(isFinal || data.status === 'final-submitted');
+        console.log('Full application data:', data.application); // Debug log
+        if (!applicationId) setApplicationId(newApplicationId);
+        setIsFinalSubmitted(isFinal); // Fallback to isFinal
         Swal.fire({
           icon: 'success',
           title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
           text: isFinal
-            ? 'Your application has been finally submitted and can no longer be edited.'
-            : `Application ${applicationId ? 'updated' : 'submitted'} successfully! Application No: ${data.applicationNo || data.applicationId}`,
+            ? 'Your application has been successfully submitted.'
+            : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
         });
-        if (!isFinal) {
-          setFormData({ personal: {}, entrance: {}, education: {}, documents: {} });
+        if (isFinal) {
+          navigate(`/submission-confirmation/${newApplicationId}`);
         }
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: data.message || 'Failed to process application',
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to process application' });
       }
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Error submitting application: ${error.message}`,
-      });
-      console.error('Submit error:', error);
+      Swal.fire({ icon: 'error', title: 'Error', text: `Error: ${error.message}` });
+      console.error('Submission error:', error);
     }
   };
 
@@ -527,7 +529,7 @@ const ApplicationForm = () => {
     e.preventDefault();
     const result = await Swal.fire({
       title: 'Confirm Final Submission',
-      text: 'Once you submit finally, you cannot make further changes to your application. Are you sure?',
+      text: 'Once you confirm final submission, you will no longer be able to edit or make further changes to your application. Are you sure?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Submit',
@@ -539,11 +541,11 @@ const ApplicationForm = () => {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('token');
     Swal.fire({
       icon: 'success',
       title: 'Logged Out',
-      text: 'You have been logged out successfully.',
+      text: 'You have successfully logged out.',
       timer: 1500,
       showConfirmButton: false,
     });
@@ -553,29 +555,28 @@ const ApplicationForm = () => {
   const updateFormData = useCallback((section, data) => {
     setFormData((prev) => {
       if (section === 'education') {
-        const updatedEducation = {};
+        const updatedEducationData = {};
         Object.keys(data).forEach((level) => {
-          updatedEducation[level] = {
+          updatedEducationData[level] = {
             ...prev[section][level] || {},
             ...data[level],
           };
         });
+        // Deep compare for education section
+        if (JSON.stringify(updatedEducationData) === JSON.stringify(prev[section])) {
+          return prev;
+        }
         return {
           ...prev,
           [section]: {
             ...prev[section],
-            ...updatedEducation,
+            ...updatedEducationData,
           },
         };
       }
-      if (section === 'entrance') {
-        return {
-          ...prev,
-          [section]: {
-            ...prev[section],
-            ...data,
-          },
-        };
+      // Deep comparison for other sections
+      if (JSON.stringify(data) === JSON.stringify(prev[section])) {
+        return prev;
       }
       return {
         ...prev,
@@ -614,30 +615,34 @@ const ApplicationForm = () => {
       {isLoading ? (
         <div>Loading application form...</div>
       ) : formType ? (
-        <form onSubmit={isFinalSubmitted ? null : applicationId ? handleSubmit : handleSubmit}>
+        <form onSubmit={isFinalSubmitted ? null : handleSubmit}>
           <PersonalDetails
             formType={formType}
             onUpdate={(data) => updateFormData('personal', data)}
             errors={errors}
             userData={userData}
+            initialData={personalData}
             disabled={isFinalSubmitted}
           />
           <EntranceExam
             formType={formType}
             onUpdate={(data) => updateFormData('entrance', data)}
             errors={errors}
+            initialData={entranceData}
             disabled={isFinalSubmitted}
           />
           <EducationQualification
             formType={formType}
             onUpdate={(data) => updateFormData('education', data)}
             errors={errors}
+            initialData={educationData}
             disabled={isFinalSubmitted}
           />
           <DocumentsUpload
             formType={formType}
             onUpdate={(data) => updateFormData('documents', data)}
             errors={errors}
+            initialData={documentsData}
             disabled={isFinalSubmitted}
           />
           {!isFinalSubmitted && (
@@ -651,7 +656,6 @@ const ApplicationForm = () => {
                       checked={termsAgreed}
                       onChange={(e) => setTermsAgreed(e.target.checked)}
                       className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
-                      disabled={isFinalSubmitted}
                     />
                     <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
                       I agree that the information I filled is correct and complete.
