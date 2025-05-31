@@ -598,12 +598,22 @@ const ApplicationForm = () => {
         <h2 className="text-2xl font-semibold text-brand-900 border-b border-brand-200 pb-2">
           Application Form - {formTypeNames[formType] || 'Loading...'}
         </h2>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
-        >
-          Logout
-        </button>
+        <div className="flex gap-2">
+          {isFinalSubmitted && (
+            <button
+              onClick={() => navigate(`/view-application/${applicationId}`)}
+              className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
+            >
+              View Application
+            </button>
+          )}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
+          >
+            Logout
+          </button>
+        </div>
       </div>
       {submissionStatus && (
         <div

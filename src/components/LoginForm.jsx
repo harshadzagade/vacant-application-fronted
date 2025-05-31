@@ -66,83 +66,85 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl p-8 w-full">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <h2 className="text-2xl font-semibold text-brand-900 border-b-2 border-brand-200 pb-2">
-          Login
-        </h2>
-        {serverError && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
-            {serverError}
-          </div>
-        )}
-        <div>
-          <label className="block text-brand-700 text-sm font-medium mb-2">
-            Username *
-          </label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-              errors.username ? 'border-red-500' : 'border-brand-200'
-            }`}
-            placeholder="Enter your username (e.g., METIOM25001)"
-            disabled={isLoading}
-          />
-          {errors.username && (
-            <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 print:min-h-0 print:p-0">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md print:w-full print:shadow-none print:rounded-none">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <h2 className="text-2xl font-semibold text-brand-900 border-b-2 border-brand-200 pb-2 text-center">
+            Login
+          </h2>
+          {serverError && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+              {serverError}
+            </div>
           )}
-        </div>
-        <div>
-          <label className="block text-brand-700 text-sm font-medium mb-2">
-            Password *
-          </label>
-          <div className="relative">
+          <div>
+            <label className="block text-brand-700 text-sm font-medium mb-2">
+              Username *
+            </label>
             <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
+              type="text"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.password ? 'border-red-500' : 'border-brand-200'
+                errors.username ? 'border-red-500' : 'border-brand-200'
               }`}
-              placeholder="Enter your password"
+              placeholder="Enter your username (e.g., METIOM25001)"
               disabled={isLoading}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-700 hover:text-brand-900"
+            {errors.username && (
+              <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-brand-700 text-sm font-medium mb-2">
+              Password *
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
+                  errors.password ? 'border-red-500' : 'border-brand-200'
+                }`}
+                placeholder="Enter your password"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-700 hover:text-brand-900"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
+          </div>
+          <div className="flex justify-between items-center">
+            <Link
+              to="/register"
+              className="text-brand-700 hover:text-brand-900 text-sm font-medium underline"
             >
-              {showPassword ? 'Hide' : 'Show'}
+              Create an account
+            </Link>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-6 py-2 rounded-lg font-semibold text-white transition shadow-md hover:shadow-lg ${
+                isLoading
+                  ? 'bg-brand-300 cursor-not-allowed'
+                  : 'bg-brand-500 hover:bg-brand-600'
+              }`}
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-          )}
-        </div>
-        <div className="flex justify-between items-center">
-          <Link
-            to="/register"
-            className="text-brand-700 hover:text-brand-900 text-sm font-medium underline"
-          >
-            Create an account
-          </Link>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`px-6 py-2 rounded-lg font-semibold text-white transition shadow-md hover:shadow-lg ${
-              isLoading
-                ? 'bg-brand-300 cursor-not-allowed'
-                : 'bg-brand-500 hover:bg-brand-600'
-            }`}
-          >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

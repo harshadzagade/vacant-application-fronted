@@ -34,6 +34,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
         englishMarks: initialData.hsc?.englishMarks || '',
       },
       graduation: {
+        graduationStatus: initialData.graduation?.graduationStatus || '',
         board: initialData.graduation?.board || '',
         school: initialData.graduation?.school || '',
         stream: initialData.graduation?.stream || '',
