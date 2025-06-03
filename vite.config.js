@@ -6,10 +6,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: ['vacantseats.met.edu'],
     port:5173,
     open: true,
     proxy: {
-      'http://localhost:5000http://localhost:5000/api': {
+      '/api': {
         target: 'http://localhost:5000/',
         changeOrigin: true,
       },
