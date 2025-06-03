@@ -34,29 +34,34 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
       address: initialData.address || '',
     };
 
-    // Update formValues if different
-    if (JSON.stringify(initialValues) !== JSON.stringify(formValues)) {
-      setFormValues(initialValues);
-    }
+    // Update formValues without triggering an infinite loop
+    setFormValues(initialValues);
 
-    // Always sync read-only fields from userData to ensure formData.personal is populated
+    // Defer the onUpdate call
     const readOnlyFields = {
       studentName: initialValues.studentName,
       mobileNo: initialValues.mobileNo,
       email: initialValues.email,
     };
-    if (JSON.stringify(readOnlyFields) !== JSON.stringify({
-      studentName: lastSyncedValues.current?.studentName,
-      mobileNo: lastSyncedValues.current?.mobileNo,
-      email: lastSyncedValues.current?.email,
-    })) {
-      onUpdate(initialValues);
-      lastSyncedValues.current = initialValues;
+    if (
+      JSON.stringify(readOnlyFields) !==
+      JSON.stringify({
+        studentName: lastSyncedValues.current?.studentName,
+        mobileNo: lastSyncedValues.current?.mobileNo,
+        email: lastSyncedValues.current?.email,
+      })
+    ) {
+      setTimeout(() => {
+        onUpdate(initialValues);
+        lastSyncedValues.current = initialValues;
+      }, 0);
     } else if (JSON.stringify(initialValues) !== JSON.stringify(lastSyncedValues.current)) {
-      onUpdate(initialValues);
-      lastSyncedValues.current = initialValues;
+      setTimeout(() => {
+        onUpdate(initialValues);
+        lastSyncedValues.current = initialValues;
+      }, 0);
     }
-  }, [userData, initialData, onUpdate]);
+  }, [userData, initialData, onUpdate]); // Removed formValues from dependencies
 
   const handleChange = (e) => {
     const { name, value } = e.target;

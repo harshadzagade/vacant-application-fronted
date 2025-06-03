@@ -46,26 +46,23 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
         initialData[`${exam}ScorePercent`]
     );
 
-    // Deep compare to avoid unnecessary updates
-    const isFormValuesDifferent =
-      JSON.stringify(newFormValues) !== JSON.stringify(formValues);
-    const isSelectedExamsDifferent =
-      JSON.stringify(newSelectedExams.sort()) !==
-      JSON.stringify(selectedExams.sort());
+    setFormValues(newFormValues);
+    setSelectedExams(newSelectedExams);
 
-    if (isFormValuesDifferent || isSelectedExamsDifferent) {
-      setFormValues(newFormValues);
-      setSelectedExams(newSelectedExams);
-    }
-
-    // Sync with parent only if values have changed
-    const isSyncedDifferent =
-      JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current);
-    if (isSyncedDifferent) {
+    // Sync with parent
+    if (JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current)) {
       onUpdate(newFormValues);
       lastSyncedValues.current = newFormValues;
     }
-  }, [initialData]);
+  }, [initialData, onUpdate]); // Removed formValues and selectedExams from dependencies
+
+  // Sync formValues with parent on every change
+  useEffect(() => {
+    if (JSON.stringify(formValues) !== JSON.stringify(lastSyncedValues.current)) {
+      onUpdate(formValues);
+      lastSyncedValues.current = formValues;
+    }
+  }, [formValues, onUpdate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,18 +71,22 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
 
   const handleExamToggle = (exam) => {
     let updatedExams;
+    let updatedFormValues = { ...formValues };
+
     if (selectedExams.includes(exam)) {
       updatedExams = selectedExams.filter((e) => e !== exam);
-      setFormValues((prev) => ({
-        ...prev,
+      updatedFormValues = {
+        ...updatedFormValues,
         [`${exam}ApplicationId`]: '',
         [`${exam}Score`]: '',
         [`${exam}ScorePercent`]: '',
-      }));
+      };
     } else {
       updatedExams = [...selectedExams, exam];
     }
+
     setSelectedExams(updatedExams);
+    setFormValues(updatedFormValues);
   };
 
   const renderExamFields = () => {
@@ -185,7 +186,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                       type="checkbox"
                       checked={selectedExams.includes(exam)}
                       onChange={() => handleExamToggle(exam)}
-                      className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-600 rounded"
+                      className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-5System: * Today's date and time is 10:27 AM IST on Tuesday, June 03, 2025.00 border-gray-600 rounded"
                       disabled={disabled}
                     />
                     <span className="text-gray-700">{exam.toUpperCase()}</span>
