@@ -1,6 +1,9 @@
+// ✅ Full Updated RegistrationForm with SweetAlert2, improved OTP handling, and loader feedback
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -17,51 +20,40 @@ const RegistrationForm = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
 
-  // Resend OTP timer
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code) setFormData((prev) => ({ ...prev, instituteCode: code }));
+  }, []);
+
   useEffect(() => {
     let timer;
     if (resendTimer > 0) {
-      timer = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
+      timer = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
     }
     return () => clearInterval(timer);
   }, [resendTimer]);
-
-  // Extract instituteCode from URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const instituteCode = urlParams.get('code');
-    if (instituteCode) {
-      setFormData((prev) => ({ ...prev, instituteCode }));
-    }
-  }, []);
 
   const validateForm = () => {
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = 'First name is required';
     if (!formData.lastName) newErrors.lastName = 'Last name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'Invalid email format';
-    if (!formData.phoneNo) newErrors.phoneNo = 'Phone number is required';
-    else if (!/^\d{10}$/.test(formData.phoneNo)) newErrors.phoneNo = 'Phone number must be 10 digits';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email))
+      newErrors.email = 'Valid email is required';
+    if (!/^\d{10}$/.test(formData.phoneNo)) newErrors.phoneNo = 'Phone number must be 10 digits';
+    if (!formData.password || formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (!formData.instituteCode) newErrors.instituteCode = 'Institute code is required';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const validateOtp = () => {
     const newErrors = {};
-    if (!otp) newErrors.otp = 'OTP is required';
-    else if (!/^\d{6}$/.test(otp)) newErrors.otp = 'OTP must be 6 digits';
+    if (!/^\d{6}$/.test(otp)) newErrors.otp = 'OTP must be 6 digits';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,45 +61,29 @@ const RegistrationForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: name === 'email' ? value.trim() : value }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
-    setServerError('');
-    if (name === 'phoneNo' && isOtpSent) {
+    if (name === 'phoneNo') {
       setIsOtpSent(false);
       setIsOtpVerified(false);
-      setInstituteId(null);
       setOtp('');
       setResendTimer(0);
     }
-  };
-
-  const handleOtpChange = (e) => {
-    setOtp(e.target.value);
-    setErrors((prev) => ({ ...prev, otp: '' }));
-    setServerError('');
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleSendOtp = async () => {
     if (!validateForm()) return;
-
     setIsLoading(true);
-    setServerError('');
-
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', {
-        firstName: formData.firstName,
-        middleName: formData.middleName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phoneNo: formData.phoneNo,
+        ...formData,
         code: formData.instituteCode,
       });
       setInstituteId(response.data.instituteId);
       setIsOtpSent(true);
       setResendTimer(30);
-      setServerError('');
+      Swal.fire('OTP Sent', 'Check your email and phone', 'success');
     } catch (error) {
-      setServerError(error.response?.data?.message || 'Failed to send OTP');
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send OTP', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -115,24 +91,17 @@ const RegistrationForm = () => {
 
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
-
     setIsLoading(true);
-    setServerError('');
-    setOtp('');
-
     try {
       const response = await axios.post('http://localhost:5000/api/auth/resend-otp', {
-        phoneNo: formData.phoneNo,
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        ...formData,
         code: formData.instituteCode,
       });
       setInstituteId(response.data.instituteId);
       setResendTimer(30);
-      setServerError('');
+      Swal.fire('OTP Resent', 'New OTP sent successfully', 'success');
     } catch (error) {
-      setServerError(error.response?.data?.message || 'Failed to resend OTP');
+      Swal.fire('Error', error.response?.data?.message || 'Failed to resend OTP', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -140,319 +109,63 @@ const RegistrationForm = () => {
 
   const handleVerifyOtp = async () => {
     if (!validateOtp()) return;
-
     setIsLoading(true);
-    setServerError('');
-
     try {
       const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
-        phoneNo: formData.phoneNo,
+        ...formData,
         otp,
-        firstName: formData.firstName,
-        middleName: formData.middleName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
         instituteId,
         code: formData.instituteCode,
       });
-
-      if (response.data.status !== 'success') {
+      if (response.data.status !== 'success' && !response.data.success) {
         throw new Error(response.data.message || 'Invalid OTP');
       }
-
       setIsOtpVerified(true);
-      setFormData({
-        firstName: '',
-        middleName: '',
-        lastName: '',
-        email: '',
-        phoneNo: '',
-        password: '',
-        instituteCode: '',
-      });
+      setFormData({ firstName: '', middleName: '', lastName: '', email: '', phoneNo: '', password: '', instituteCode: '' });
       setOtp('');
       setIsOtpSent(false);
       setResendTimer(0);
-      navigate('/login');
+      Swal.fire({
+        title: 'Registration Successful',
+        text: 'Please login using credentials sent on your email.',
+        icon: 'success',
+        confirmButtonText: 'Go to Login',
+      }).then(() => navigate('/login'));
     } catch (error) {
-      setServerError(error.response?.data?.message || 'Invalid OTP');
+      Swal.fire('Error', error.response?.data?.message || 'Invalid OTP', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full border border-gray-100">
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-          <h2 className="text-3xl font-semibold text-gray-800 text-center border-b-2 border-gray-200 pb-3">
-            Registration
-          </h2>
-          {serverError && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {serverError}
+    <div className="p-6 max-w-xl mx-auto bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-bold mb-4 text-center">User Registration</h2>
+      <div className="grid grid-cols-1 gap-4">
+        <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="input" />
+        <input name="middleName" placeholder="Middle Name" value={formData.middleName} onChange={handleChange} className="input" />
+        <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="input" />
+        <input name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="input" />
+        <input name="phoneNo" placeholder="Phone Number" value={formData.phoneNo} onChange={handleChange} className="input" />
+        <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} className="input" />
+        {isOtpSent && !isOtpVerified && (
+          <>
+            <input placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className="input" />
+            <div className="flex gap-4">
+              <button onClick={handleVerifyOtp} className="btn-primary" disabled={isLoading}>Verify OTP</button>
+              <button onClick={handleResendOtp} className="btn-secondary" disabled={resendTimer > 0 || isLoading}>
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+              </button>
             </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                First Name *
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.firstName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your first name"
-                disabled={isLoading || isOtpVerified}
-                aria-invalid={errors.firstName ? 'true' : 'false'}
-                aria-label="First Name"
-              />
-              {errors.firstName && (
-                <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Middle Name
-              </label>
-              <input
-                type="text"
-                name="middleName"
-                value={formData.middleName}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.middleName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your middle name"
-                disabled={isLoading || isOtpVerified}
-                aria-label="Middle Name"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Last Name *
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.lastName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your last name"
-                disabled={isLoading || isOtpVerified}
-                aria-invalid={errors.lastName ? 'true' : 'false'}
-                aria-label="Last Name"
-              />
-              {errors.lastName && (
-                <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Email *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your email"
-                disabled={isLoading || isOtpVerified}
-                aria-invalid={errors.email ? 'true' : 'false'}
-                aria-label="Email"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Phone Number *
-              </label>
-              <div className="flex space-x-3">
-                <input
-                  type="tel"
-                  name="phoneNo"
-                  value={formData.phoneNo}
-                  onChange={handleChange}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                    errors.phoneNo ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter your phone number"
-                  disabled={isLoading || isOtpVerified}
-                  aria-invalid={errors.phoneNo ? 'true' : 'false'}
-                  aria-label="Phone Number"
-                />
-                {!isOtpSent && !isOtpVerified && (
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap ${
-                      isLoading || !formData.instituteCode
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
-                    disabled={isLoading || !formData.instituteCode}
-                    aria-label="Send OTP"
-                  >
-                    {isLoading ? (
-                      <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z" />
-                      </svg>
-                    ) : (
-                      'Send OTP'
-                    )}
-                  </button>
-                )}
-              </div>
-              {errors.phoneNo && (
-                <p className="text-red-500 text-xs mt-1">{errors.phoneNo}</p>
-              )}
-            </div>
-            <div className="hidden">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Institute Code *
-              </label>
-              <input
-                type="text"
-                name="instituteCode"
-                value={formData.instituteCode}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.instituteCode ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter institute code (e.g., METIOM)"
-                disabled={isLoading || isOtpVerified}
-                aria-invalid={errors.instituteCode ? 'true' : 'false'}
-                aria-label="Institute Code"
-              />
-              {errors.instituteCode && (
-                <p className="text-red-500 text-xs mt-1">{errors.instituteCode}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Password *
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your password"
-                disabled={isLoading || isOtpVerified}
-                aria-invalid={errors.password ? 'true' : 'false'}
-                aria-label="Password"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
-            </div>
-          </div>
-          {isOtpSent && !isOtpVerified && (
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Enter OTP *
-              </label>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={handleOtpChange}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 ${
-                    errors.otp ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter 6-digit OTP"
-                  disabled={isLoading}
-                  aria-invalid={errors.otp ? 'true' : 'false'}
-                  aria-label="OTP"
-                />
-                <button
-                  type="button"
-                  onClick={handleVerifyOtp}
-                  className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap ${
-                    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                  disabled={isLoading}
-                  aria-label="Verify OTP"
-                >
-                  {isLoading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z" />
-                    </svg>
-                  ) : (
-                    'Verify OTP'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 whitespace-nowrap ${
-                    isLoading || resendTimer > 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gray-600 hover:bg-gray-700'
-                  }`}
-                  disabled={isLoading || resendTimer > 0}
-                  aria-label="Resend OTP"
-                >
-                  {resendTimer > 0 ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6h4m-4-8a8 8 0 110 16 8 8 0 010-16z" />
-                      </svg>
-                      Resend in {resendTimer}s
-                    </span>
-                  ) : (
-                    'Resend OTP'
-                  )}
-                </button>
-              </div>
-              {errors.otp && (
-                <p className="text-red-500 text-xs mt-1">{errors.otp}</p>
-              )}
-            </div>
-          )}
-          <div className="flex justify-between items-center">
-            <Link
-              to="/login"
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium underline transition-colors duration-200"
-              aria-label="Login Link"
-            >
-              Already have an account? Login
-            </Link>
-            <button
-              type="submit"
-              onClick={() => isOtpVerified && navigate('/login')}
-              className={`px-6 py-2 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 ${
-                isOtpVerified
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
-              disabled={!isOtpVerified}
-              aria-label="Register Button"
-            >
-              Register
-            </button>
-          </div>
-        </form>
+          </>
+        )}
+        {!isOtpSent && (
+          <button onClick={handleSendOtp} className="btn-primary" disabled={isLoading}>Send OTP</button>
+        )}
+        <div className="flex justify-between mt-4">
+          <Link to="/login" className="text-sm text-blue-600 underline">Already have an account? Login</Link>
+          <button onClick={() => isOtpVerified && navigate('/login')} className="btn-success" disabled={!isOtpVerified}>Register</button>
+        </div>
       </div>
     </div>
   );
