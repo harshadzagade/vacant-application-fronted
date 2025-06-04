@@ -32,7 +32,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       if (initialData[key]) {
         newUploadedFiles[key] = initialData[key];
         if (typeof initialData[key] === 'string') {
-          newFilePreviews[key] = `http://localhost:5000/${initialData[key].replace(/\\/g, '/')}`;
+          newFilePreviews[key] = `https://vacantseats.met.edu/${initialData[key].replace(/\\/g, '/')}`;
         } else {
           newFilePreviews[key] = null;
         }

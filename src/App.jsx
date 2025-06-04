@@ -47,7 +47,7 @@ function App() {
         if (!token) return;
 
         // Fetch user data for institute name
-        const userResponse = await fetch('http://localhost:5000/api/auth/user', {
+        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
@@ -59,7 +59,7 @@ function App() {
         const path = window.location.pathname;
         const applicationId = path.split('/view-application/')[1];
         if (applicationId) {
-          const appResponse = await fetch(`http://localhost:5000/api/application/details/${applicationId}`, {
+          const appResponse = await fetch(`https://vacantseats.met.edu/api/application/details/${applicationId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (!appResponse.ok) throw new Error('Failed to fetch application details');

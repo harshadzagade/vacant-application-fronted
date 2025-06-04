@@ -52,7 +52,7 @@ const ApplicationForm = () => {
         }
 
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/api/auth/user', {
+        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) {
@@ -101,7 +101,7 @@ const ApplicationForm = () => {
         }));
 
         // Fetch existing applications
-        const appResponse = await fetch('http://localhost:5000/api/application', {
+        const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!appResponse.ok) {
@@ -121,7 +121,7 @@ const ApplicationForm = () => {
           const application = appData.applications[0];
           setApplicationId(application.applicationId);
           // Fetch application details
-          const detailsResponse = await fetch(`http://localhost:5000/api/application/details/${application.applicationId}`, {
+          const detailsResponse = await fetch(`https://vacantseats.met.edu/api/application/details/${application.applicationId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (!detailsResponse.ok) {
@@ -484,7 +484,7 @@ const ApplicationForm = () => {
         return;
       }
 
-      const url = applicationId ? `http://localhost:5000/api/application/update/${applicationId}` : 'http://localhost:5000/api/application/submit';
+      const url = applicationId ? `https://vacantseats.met.edu/api/application/update/${applicationId}` : 'https://vacantseats.met.edu/api/application/submit';
       const method = applicationId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {

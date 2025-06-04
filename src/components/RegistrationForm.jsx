@@ -74,7 +74,7 @@ const RegistrationForm = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await axios.post('https://vacantseats.met.edu/api/auth/register', {
         ...formData,
         code: formData.instituteCode,
       });
@@ -93,7 +93,7 @@ const RegistrationForm = () => {
     if (resendTimer > 0) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/resend-otp', {
+      const response = await axios.post('https://vacantseats.met.edu/api/auth/resend-otp', {
         ...formData,
         code: formData.instituteCode,
       });
@@ -111,7 +111,7 @@ const RegistrationForm = () => {
     if (!validateOtp()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+      const response = await axios.post('https://vacantseats.met.edu/api/auth/verify-otp', {
         ...formData,
         otp,
         instituteId,

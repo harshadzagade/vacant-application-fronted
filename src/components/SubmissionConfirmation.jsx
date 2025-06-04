@@ -46,7 +46,7 @@ const SubmissionConfirmation = () => {
         }
 
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/api/auth/user', {
+        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
@@ -55,7 +55,7 @@ const SubmissionConfirmation = () => {
         setUserData(userResult.user);
 
         // Fetch application details
-        const appResponse = await fetch(`http://localhost:5000/api/application/details/${applicationId}`, {
+        const appResponse = await fetch(`https://vacantseats.met.edu/api/application/details/${applicationId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!appResponse.ok) throw new Error('Failed to fetch application details');
