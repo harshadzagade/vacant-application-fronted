@@ -1,5 +1,3 @@
-// ✅ Full Updated RegistrationForm with SweetAlert2, improved OTP handling, and loader feedback
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -45,8 +43,16 @@ const RegistrationForm = () => {
     if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email))
       newErrors.email = 'Valid email is required';
     if (!/^\d{10}$/.test(formData.phoneNo)) newErrors.phoneNo = 'Phone number must be 10 digits';
-    if (!formData.password || formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (!formData.instituteCode) newErrors.instituteCode = 'Institute code is required';
+    
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]).{8,}$/;
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password = 'Password must be at least 8 characters long, with at least one lowercase letter, one uppercase letter, one number, and one special character (!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~)';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -121,10 +127,6 @@ const RegistrationForm = () => {
         throw new Error(response.data.message || 'Invalid OTP');
       }
       setIsOtpVerified(true);
-      setFormData({ firstName: '', middleName: '', lastName: '', email: '', phoneNo: '', password: '', instituteCode: '' });
-      setOtp('');
-      setIsOtpSent(false);
-      setResendTimer(0);
       Swal.fire({
         title: 'Registration Successful',
         text: 'Please login using credentials sent on your email.',
@@ -139,32 +141,155 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center">User Registration</h2>
-      <div className="grid grid-cols-1 gap-4">
-        <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="input" />
-        <input name="middleName" placeholder="Middle Name" value={formData.middleName} onChange={handleChange} className="input" />
-        <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="input" />
-        <input name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="input" />
-        <input name="phoneNo" placeholder="Phone Number" value={formData.phoneNo} onChange={handleChange} className="input" />
-        <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} className="input" />
-        {isOtpSent && !isOtpVerified && (
-          <>
-            <input placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className="input" />
-            <div className="flex gap-4">
-              <button onClick={handleVerifyOtp} className="btn-primary" disabled={isLoading}>Verify OTP</button>
-              <button onClick={handleResendOtp} className="btn-secondary" disabled={resendTimer > 0 || isLoading}>
-                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">User Registration</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+          </div>
+          <div>
+            <input
+              name="middleName"
+              placeholder="Middle Name"
+              value={formData.middleName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+          </div>
+          <div>
+            <input
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <input
+              name="phoneNo"
+              placeholder="Phone Number"
+              value={formData.phoneNo}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.phoneNo && <p className="text-red-500 text-sm mt-1">{errors.phoneNo}</p>}
+          </div>
+          <div>
+            <input
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          </div>
+          <div>
+            <input
+              name="instituteCode"
+              placeholder="Institute Code"
+              value={formData.instituteCode}
+              onChange={handleChange}
+              className="hidden w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.instituteCode && <p className="text-red-500 text-sm mt-1">{errors.instituteCode}</p>}
+          </div>
+          {isOtpSent && !isOtpVerified && (
+            <div>
+              <input
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {errors.otp && <p className="text-red-500 text-sm mt-1">{errors.otp}</p>}
+            </div>
+          )}
+        </div>
+        <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+          {!isOtpSent && (
+            <button
+              onClick={handleSendOtp}
+              className={`w-full md:w-auto px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${formData.instituteCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
+              disabled={!formData.instituteCode || isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending...
+                </div>
+              ) : (
+                'Send OTP'
+              )}
+            </button>
+          )}
+          {isOtpSent && !isOtpVerified && (
+            <div className="flex gap-4 w-full md:w-auto">
+              <button
+                onClick={handleVerifyOtp}
+                className={`px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </div>
+                ) : (
+                  'Verify OTP'
+                )}
+              </button>
+              <button
+                onClick={handleResendOtp}
+                className={`px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${resendTimer > 0 || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                disabled={resendTimer > 0 || isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Resending...
+                  </div>
+                ) : (
+                  resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'
+                )}
               </button>
             </div>
-          </>
-        )}
-        {!isOtpSent && (
-          <button onClick={handleSendOtp} className="btn-primary" disabled={isLoading}>Send OTP</button>
-        )}
-        <div className="flex justify-between mt-4">
-          <Link to="/login" className="text-sm text-blue-600 underline">Already have an account? Login</Link>
-          <button onClick={() => isOtpVerified && navigate('/login')} className="btn-success" disabled={!isOtpVerified}>Register</button>
+          )}
+          <div className="flex gap-4">
+            <Link to="/login" className="text-sm text-blue-600 hover:underline">
+              Already have an account? Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>
