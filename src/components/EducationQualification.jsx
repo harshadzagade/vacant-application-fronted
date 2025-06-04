@@ -176,7 +176,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
                   </div>
                   <div>
-                    <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
+                    <label className="block text-brand-700 text-sm font-medium mb-2">Year of Passing</label>
                     <input
                       type="number"
                       name={`${level}.year`}
@@ -313,7 +313,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
                   </div>
                   <div>
-                    <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
+                    <label className="block text-brand-700 text-sm font-medium mb-2">Year of Passing</label>
                     <input
                       type="number"
                       name={`${level}.year`}
@@ -437,7 +437,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
                   </div>
                   <div>
-                    <label className="block text-brand-700 text-sm font-medium mb-2">Year</label>
+                    <label className="block text-brand-700 text-sm font-medium mb-2">Year of Passing</label>
                     <input
                       type="number"
                       name={`${level}.year`}
