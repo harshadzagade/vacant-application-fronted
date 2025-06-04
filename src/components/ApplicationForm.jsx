@@ -499,22 +499,46 @@ const ApplicationForm = () => {
       const data = await response.json();
 
       if (data.success) {
-        const newApplicationId = data.application?.applicationId;
-        if (!newApplicationId) {
-          throw new Error('No application ID returned from server');
-        }
-        console.log('Full application data:', data.application); // Debug log
-        if (!applicationId) setApplicationId(newApplicationId);
-        setIsFinalSubmitted(isFinal); // Fallback to isFinal
-        Swal.fire({
-          icon: 'success',
-          title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
-          text: isFinal
-            ? 'Your application has been successfully submitted.'
-            : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
-        });
-        if (isFinal) {
-          navigate(`/submission-confirmation/${newApplicationId}`);
+        console.log('Full server response:', data); // Log the entire response
+        const newApplicationId = data.application?.applicationId || data.applicationId || data.id; // Check alternative keys
+        if (!newApplicationId && !applicationId) {
+          // If no applicationId is returned and this is a new submission, fetch the latest application
+          const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (!appResponse.ok) {
+            throw new Error('Failed to fetch applications after submission');
+          }
+          const appData = await appResponse.json();
+          if (appData.success && appData.applications.length > 0) {
+            const latestApplication = appData.applications[0];
+            setApplicationId(latestApplication.applicationId);
+            Swal.fire({
+              icon: 'success',
+              title: isFinal ? 'Final Submission Successful' : 'Application Submitted',
+              text: isFinal
+                ? 'Your application has been successfully submitted.'
+                : `Application submitted successfully: ${latestApplication.applicationId}`,
+            });
+            if (isFinal) {
+              navigate(`/submission-confirmation/${latestApplication.applicationId}`);
+            }
+          } else {
+            throw new Error('No applications found after submission');
+          }
+        } else {
+          if (!applicationId) setApplicationId(newApplicationId);
+          setIsFinalSubmitted(isFinal);
+          Swal.fire({
+            icon: 'success',
+            title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
+            text: isFinal
+              ? 'Your application has been successfully submitted.'
+              : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
+          });
+          if (isFinal) {
+            navigate(`/submission-confirmation/${newApplicationId}`);
+          }
         }
       } else {
         Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to process application' });
