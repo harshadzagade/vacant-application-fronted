@@ -243,6 +243,37 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
             {['ssc', 'hsc', 'graduation'].map((level) => (
               <div key={level} className="border border-brand-100 p-6 rounded-xl bg-brand-50">
                 <h3 className="text-lg font-medium mb-4 text-brand-800">{level.toUpperCase()}</h3>
+
+                {level === 'graduation' && (
+                  <div className="mb-4">
+                    <span className="block text-brand-700 text-sm font-medium mb-2">Status</span>
+                    <label className="mr-4">
+                      <input
+                        type="radio"
+                        name="graduationStatus"
+                        value="appeared"
+                        checked={graduationStatus === 'appeared'}
+                        onChange={handleGraduationStatusChange}
+                        className="mr-2"
+                        disabled={disabled}
+                      />
+                      Appeared
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="graduationStatus"
+                        value="appearing"
+                        checked={graduationStatus === 'appearing'}
+                        onChange={handleGraduationStatusChange}
+                        className="mr-2"
+                        disabled={disabled}
+                      />
+                      Appearing
+                    </label>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-brand-700 text-sm font-medium mb-2">Board/University *</label>
