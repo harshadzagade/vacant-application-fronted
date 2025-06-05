@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import PersonalDetails from './PersonalDetails';
@@ -28,6 +28,7 @@ const ApplicationForm = () => {
   const [submissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [termsAgreed, setTermsAgreed] = useState(false);
+  const formRef = useRef();
   const navigate = useNavigate();
 
   // Memoize formData sections to stabilize references
@@ -36,161 +37,161 @@ const ApplicationForm = () => {
   const educationData = useMemo(() => formData.education, [formData.education]);
   const documentsData = useMemo(() => formData.documents, [formData.documents]);
 
-useEffect(() => {
-  const fetchUserDataAndApplication = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Authentication Error',
-          text: 'Please log in to continue',
+  useEffect(() => {
+    const fetchUserDataAndApplication = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Authentication Error',
+            text: 'Please log in to continue',
+          });
+          navigate('/login');
+          return;
+        }
+
+        // Fetch user data
+        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
+          headers: { 'Authorization': `Bearer ${token}` },
         });
-        navigate('/login');
-        return;
-      }
-
-      // Fetch user data
-      const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!userResponse.ok) {
-        const text = await userResponse.text();
-        console.error('User fetch error:', {
-          status: userResponse.status,
-          url: userResponse.url,
-          response: text.slice(0, 200),
-        });
-        throw new Error(`Failed to fetch user data: ${userResponse.status}`);
-      }
-      const userDataResponse = await userResponse.json();
-      if (!userDataResponse.success) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: userDataResponse.message || 'Failed to fetch user data',
-        });
-        localStorage.removeItem('token');
-        navigate('/login');
-        return;
-      }
-      const user = userDataResponse.user;
-      setUserData(user);
-
-      // Determine the current institute's formType
-      const currentFormType = user.institutes?.length > 0 ? user.institutes[0].code : null;
-      if (!currentFormType) {
-        Swal.fire({
-          icon: 'error',
-          title: 'No Institute',
-          text: 'No institute associated with this account',
-        });
-        navigate('/login');
-        return;
-      }
-      setFormType(currentFormType);
-
-      // Initialize personal data with user data
-      setFormData((prev) => ({
-        ...prev,
-        personal: {
-          ...prev.personal,
-          studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
-          mobileNo: user.phoneNo || '',
-          email: user.email || '',
-        },
-      }));
-
-      // Fetch existing applications
-      const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!appResponse.ok) {
-        const text = await appResponse.text();
-        console.error('Applications fetch error:', {
-          status: appResponse.status,
-          url: appResponse.url,
-          response: text.slice(0, 200),
-        });
-        throw new Error(`Failed to fetch applications: ${appResponse.status}`);
-      }
-      const appData = await appResponse.json();
-      if (!appData.success) {
-        throw new Error(appData.message || 'Failed to fetch applications');
-      }
-
-      // Find application matching the current formType
-      const matchingApplication = appData.applications.find(
-        (app) => app.formType === currentFormType
-      );
-
-      if (matchingApplication) {
-        setApplicationId(matchingApplication.applicationId);
-        // Fetch application details
-        const detailsResponse = await fetch(
-          `https://vacantseats.met.edu/api/application/details/${matchingApplication.applicationId}`,
-          {
-            headers: { 'Authorization': `Bearer ${token}` },
-          }
-        );
-        if (!detailsResponse.ok) {
-          const text = await detailsResponse.text();
-          console.error('Details fetch error:', {
-            status: detailsResponse.status,
-            url: detailsResponse.url,
+        if (!userResponse.ok) {
+          const text = await userResponse.text();
+          console.error('User fetch error:', {
+            status: userResponse.status,
+            url: userResponse.url,
             response: text.slice(0, 200),
           });
-          throw new Error(`Failed to fetch application details: ${detailsResponse.status}`);
+          throw new Error(`Failed to fetch user data: ${userResponse.status}`);
         }
-        const detailsData = await detailsResponse.json();
-        if (detailsData.success) {
-          setFormData((prev) => ({
-            personal: {
-              ...prev.personal,
-              ...detailsData.application.personal,
-              studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
-              mobileNo: user.phoneNo || '',
-              email: user.email || '',
-            },
-            entrance: detailsData.application.entrance || {},
-            education: detailsData.application.education || {},
-            documents: detailsData.application.documents || {},
-          }));
-          setIsFinalSubmitted(detailsData.application.status === 'final-submitted');
-        } else {
-          throw new Error(detailsData.message || 'Failed to fetch application details');
+        const userDataResponse = await userResponse.json();
+        if (!userDataResponse.success) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: userDataResponse.message || 'Failed to fetch user data',
+          });
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
         }
-      } else {
-        // No matching application found; reset form for new application
-        setApplicationId(null);
-        setIsFinalSubmitted(false);
-        setFormData({
+        const user = userDataResponse.user;
+        setUserData(user);
+
+        // Determine the current institute's formType
+        const currentFormType = user.institutes?.length > 0 ? user.institutes[0].code : null;
+        if (!currentFormType) {
+          Swal.fire({
+            icon: 'error',
+            title: 'No Institute',
+            text: 'No institute associated with this account',
+          });
+          navigate('/login');
+          return;
+        }
+        setFormType(currentFormType);
+
+        // Initialize personal data with user data
+        setFormData((prev) => ({
+          ...prev,
           personal: {
+            ...prev.personal,
             studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
             mobileNo: user.phoneNo || '',
             email: user.email || '',
           },
-          entrance: {},
-          education: {},
-          documents: {},
+        }));
+
+        // Fetch existing applications
+        const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
+          headers: { 'Authorization': `Bearer ${token}` },
         });
+        if (!appResponse.ok) {
+          const text = await appResponse.text();
+          console.error('Applications fetch error:', {
+            status: appResponse.status,
+            url: appResponse.url,
+            response: text.slice(0, 200),
+          });
+          throw new Error(`Failed to fetch applications: ${appResponse.status}`);
+        }
+        const appData = await appResponse.json();
+        if (!appData.success) {
+          throw new Error(appData.message || 'Failed to fetch applications');
+        }
+
+        // Find application matching the current formType
+        const matchingApplication = appData.applications.find(
+          (app) => app.formType === currentFormType
+        );
+
+        if (matchingApplication) {
+          setApplicationId(matchingApplication.applicationId);
+          // Fetch application details
+          const detailsResponse = await fetch(
+            `https://vacantseats.met.edu/api/application/details/${matchingApplication.applicationId}`,
+            {
+              headers: { 'Authorization': `Bearer ${token}` },
+            }
+          );
+          if (!detailsResponse.ok) {
+            const text = await detailsResponse.text();
+            console.error('Details fetch error:', {
+              status: detailsResponse.status,
+              url: detailsResponse.url,
+              response: text.slice(0, 200),
+            });
+            throw new Error(`Failed to fetch application details: ${detailsResponse.status}`);
+          }
+          const detailsData = await detailsResponse.json();
+          if (detailsData.success) {
+            setFormData((prev) => ({
+              personal: {
+                ...prev.personal,
+                ...detailsData.application.personal,
+                studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
+                mobileNo: user.phoneNo || '',
+                email: user.email || '',
+              },
+              entrance: detailsData.application.entrance || {},
+              education: detailsData.application.education || {},
+              documents: detailsData.application.documents || {},
+            }));
+            setIsFinalSubmitted(detailsData.application.status === 'final-submitted');
+          } else {
+            throw new Error(detailsData.message || 'Failed to fetch application details');
+          }
+        } else {
+          // No matching application found; reset form for new application
+          setApplicationId(null);
+          setIsFinalSubmitted(false);
+          setFormData({
+            personal: {
+              studentName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
+              mobileNo: user.phoneNo || '',
+              email: user.email || '',
+            },
+            entrance: {},
+            education: {},
+            documents: {},
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error fetching data: ${error.message}`,
+        });
+        console.error('Fetch error:', error);
+        localStorage.removeItem('token');
+        navigate('/login');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Error fetching data: ${error.message}`,
-      });
-      console.error('Fetch error:', error);
-      localStorage.removeItem('token');
-      navigate('/login');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchUserDataAndApplication();
-}, [navigate]);
+    };
+    fetchUserDataAndApplication();
+  }, [navigate]);
 
   const validateForm = () => {
     if (!formType) {
@@ -476,6 +477,14 @@ useEffect(() => {
 
   const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
+
+    // 🔒 Trigger browser-based validation
+    if (formRef.current && !formRef.current.checkValidity()) {
+      formRef.current.reportValidity();
+      return;
+    }
+
+
     if (!formType) {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Form type is not set.' });
       return;
@@ -556,9 +565,9 @@ useEffect(() => {
           Swal.fire({
             icon: 'success',
             title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
-            text: isFinal
-              ? 'Your application has been successfully submitted.'
-              : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
+            // text: isFinal
+            //   ? 'Your application has been successfully submitted.'
+            //   : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
           });
           if (isFinal) {
             navigate(`/submission-confirmation/${newApplicationId}`);
@@ -673,7 +682,7 @@ useEffect(() => {
       {isLoading ? (
         <div>Loading application form...</div>
       ) : formType ? (
-        <form onSubmit={isFinalSubmitted ? null : handleSubmit}>
+        <form ref={formRef} onSubmit={isFinalSubmitted ? null : handleSubmit} noValidate>
           <PersonalDetails
             formType={formType}
             onUpdate={(data) => updateFormData('personal', data)}

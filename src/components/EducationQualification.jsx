@@ -46,7 +46,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
 
     const newGraduationStatus = initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing';
 
-    // Deep compare to avoid unnecessary updates
     if (JSON.stringify(newFormValues) !== JSON.stringify(formValues)) {
       setFormValues(newFormValues);
     }
@@ -54,7 +53,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
       setGraduationStatus(newGraduationStatus);
     }
 
-    // Sync with parent only if values have changed
     if (JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current)) {
       onUpdate(newFormValues);
       lastSyncedValues.current = newFormValues;
@@ -68,7 +66,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
       setFormValues((prev) => {
         const updatedLevel = { ...prev[level], [field]: value };
         const updatedValues = { ...prev, [level]: updatedLevel };
-        // Sync with parent
         if (JSON.stringify(updatedValues) !== JSON.stringify(lastSyncedValues.current)) {
           onUpdate(updatedValues);
           lastSyncedValues.current = updatedValues;
@@ -87,7 +84,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
           ...prev,
           graduation: { ...prev.graduation, marks: '', percent: '' },
         };
-        // Sync with parent
         if (JSON.stringify(updatedValues) !== JSON.stringify(lastSyncedValues.current)) {
           onUpdate(updatedValues);
           lastSyncedValues.current = updatedValues;
@@ -114,9 +110,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.board`}
                       value={formValues[level].board}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.board`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.board`]}</p>}
@@ -128,9 +124,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.school`}
                       value={formValues[level].school}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -141,9 +137,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.stream`}
                       value={formValues[level].stream}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -154,9 +150,10 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.marks`}
                       value={formValues[level].marks}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="0"
+                      max="100"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.marks`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.marks`]}</p>}
@@ -168,9 +165,10 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.percent`}
                       value={formValues[level].percent}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="0"
+                      step="0.1"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
@@ -182,9 +180,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.year`}
                       value={formValues[level].year}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      minLength="4"
+                      maxLength="4"
+                      pattern="[0-9]{4}"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -195,9 +195,8 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.pcmMarks`}
                       value={formValues[level].pcmMarks}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.pcmMarks`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.pcmMarks`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -208,9 +207,8 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.pcbMarks`}
                       value={formValues[level].pcbMarks}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.pcbMarks`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.pcbMarks`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -222,9 +220,8 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                         name={`${level}.englishMarks`}
                         value={formValues[level].englishMarks}
                         onChange={handleChange}
-                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                          errors[`${level}.englishMarks`] ? 'border-red-500' : 'border-brand-200'
-                        }`}
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.englishMarks`] ? 'border-red-500' : 'border-brand-200'
+                          }`}
                         disabled={disabled}
                       />
                       {errors[`${level}.englishMarks`] && (
@@ -282,9 +279,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.board`}
                       value={formValues[level].board}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.board`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.board`]}</p>}
@@ -296,9 +293,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.school`}
                       value={formValues[level].school}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -309,9 +306,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.stream`}
                       value={formValues[level].stream}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -322,9 +319,10 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.marks`}
                       value={formValues[level].marks}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="0"
+                      max="100"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.marks`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.marks`]}</p>}
@@ -336,9 +334,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.percent`}
                       value={formValues[level].percent}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
@@ -350,9 +350,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.year`}
                       value={formValues[level].year}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      pattern="[0-9]{4}"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -406,9 +408,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.board`}
                       value={formValues[level].board}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.board`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.board`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.board`]}</p>}
@@ -420,9 +422,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.school`}
                       value={formValues[level].school}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.school`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -433,9 +435,9 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.stream`}
                       value={formValues[level].stream}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      pattern="[a-zA-Z\s]*"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.stream`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                   </div>
@@ -446,10 +448,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.marks`}
                       value={formValues[level].marks}
                       onChange={handleChange}
+                      min="0"
+                      max="100"
+                      pattern="[0-9]*"
                       disabled={(level === 'graduation' && graduationStatus === 'appearing') || disabled}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100 ${
-                        errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100 ${errors[`${level}.marks`] ? 'border-red-500' : 'border-brand-200'}`}
                     />
                     {errors[`${level}.marks`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.marks`]}</p>}
                   </div>
@@ -460,10 +463,12 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.percent`}
                       value={formValues[level].percent}
                       onChange={handleChange}
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      pattern="[0-9]*"
                       disabled={(level === 'graduation' && graduationStatus === 'appearing') || disabled}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100 ${
-                        errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:bg-gray-100 ${errors[`${level}.percent`] ? 'border-red-500' : 'border-brand-200'}`}
                     />
                     {errors[`${level}.percent`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.percent`]}</p>}
                   </div>
@@ -474,9 +479,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
                       name={`${level}.year`}
                       value={formValues[level].year}
                       onChange={handleChange}
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                        errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
-                      }`}
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      pattern="[0-9]{4}"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors[`${level}.year`] ? 'border-red-500' : 'border-brand-200'
+                        }`}
                       disabled={disabled}
                     />
                     {errors[`${level}.year`] && <p className="text-red-500 text-xs mt-1">{errors[`${level}.year`]}</p>}

@@ -20,6 +20,7 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,8 +45,8 @@ const RegistrationForm = () => {
       newErrors.email = 'Valid email is required';
     if (!/^\d{10}$/.test(formData.phoneNo)) newErrors.phoneNo = 'Phone number must be 10 digits';
     if (!formData.instituteCode) newErrors.instituteCode = 'Institute code is required';
-    
-    // Password validation
+
+    // eslint-disable-next-line no-useless-escape
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]).{8,}$/;
     if (!formData.password) {
       newErrors.password = 'Password is required';
@@ -197,12 +198,27 @@ const RegistrationForm = () => {
           <div>
             <input
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
               className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <div className="mt-1">
+              <input
+                type="checkbox"
+                id="show-password"
+                checked={showPassword}
+                onChange={() => setShowPassword(!showPassword)}
+              />
+              <label
+                htmlFor="show-password"
+                className="ml-2 text-sm"
+                aria-label={showPassword ? 'Hide password' : 'Show password'} // Bug 2: Added aria-label for accessibility
+              >
+                Show Password
+              </label>
+            </div>
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
           </div>
           <div>

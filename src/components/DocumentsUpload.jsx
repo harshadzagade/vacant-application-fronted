@@ -21,8 +21,8 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
   });
 
   const [fileErrors, setFileErrors] = useState({});
+  const [isUploading, setIsUploading] = useState({}); // Bug 12: Added loading state for file uploads
 
-  // Initialize with initialData if provided
   useEffect(() => {
     if (!initialData) return;
 
@@ -46,7 +46,6 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     setFilePreviews(newFilePreviews);
   }, [initialData]);
 
-  // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
       Object.values(filePreviews).forEach((preview) => {
@@ -57,15 +56,15 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     };
   }, [filePreviews]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const { name, files } = e.target;
     if (!files[0]) return;
 
+    setIsUploading((prev) => ({ ...prev, [name]: true })); // Bug 12: Set loading state
     const file = files[0];
     const maxSize = 5 * 1024 * 1024; // 5MB limit
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
 
-    // Validate file type
     if (!allowedTypes.includes(file.type)) {
       setFileErrors((prev) => ({
         ...prev,
@@ -74,10 +73,10 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       setUploadedFiles((prev) => ({ ...prev, [name]: null }));
       setFilePreviews((prev) => ({ ...prev, [name]: null }));
       onUpdate({ [name]: null });
+      setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
       return;
     }
 
-    // Validate file size
     if (file.size > maxSize) {
       setFileErrors((prev) => ({
         ...prev,
@@ -86,22 +85,22 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       setUploadedFiles((prev) => ({ ...prev, [name]: null }));
       setFilePreviews((prev) => ({ ...prev, [name]: null }));
       onUpdate({ [name]: null });
+      setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
       return;
     }
 
-    // Clear previous preview if it exists
     if (filePreviews[name] && filePreviews[name].startsWith('blob:')) {
       URL.revokeObjectURL(filePreviews[name]);
     }
 
-    // Create a new preview URL
     const previewUrl = URL.createObjectURL(file);
     setUploadedFiles((prev) => ({ ...prev, [name]: file }));
     setFilePreviews((prev) => ({ ...prev, [name]: previewUrl }));
     setFileErrors((prev) => ({ ...prev, [name]: '' }));
     onUpdate({ [name]: file });
+    setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
 
-    console.log(`Selected file for ${name}:`, file); // Debug
+    console.log(`Selected file for ${name}:`, file);
   };
 
   const handleRemoveFile = (key) => {
@@ -124,8 +123,11 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
 
   const isImageFile = (file) => {
     if (!file) return false;
-    const type = typeof file === 'string' ? file.split('.').pop().toLowerCase() : file.type;
-    return ['jpeg', 'jpg', 'png'].includes(type) || type.includes('image/');
+    if (typeof file === 'string') {
+      const extension = file.split('.').pop().toLowerCase();
+      return ['jpeg', 'jpg', 'png'].includes(extension); // Bug 7: Simplified extension check
+    }
+    return ['image/jpeg', 'image/png'].includes(file.type); // Bug 7: Check MIME type for uploaded files
   };
 
   const renderDocumentFields = () => {
@@ -182,18 +184,28 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
                     </button>
                   </div>
                 )}
-                <input
-                  type="file"
-                  name={key}
-                  onChange={handleFileChange}
-                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200 hover:file:text-red-800 ${
-                    errors[key] || fileErrors[key] ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  accept={accept}
-                  disabled={disabled}
-                  aria-invalid={errors[key] || fileErrors[key] ? 'true' : 'false'}
-                  aria-label={label}
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    name={key}
+                    onChange={handleFileChange}
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200 hover:file:text-red-800 ${
+                      errors[key] || fileErrors[key] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    accept={accept}
+                    disabled={disabled || isUploading[key]} // Bug 12: Disable during upload
+                    aria-invalid={errors[key] || fileErrors[key] ? 'true' : 'false'}
+                    aria-label={label}
+                  />
+                  {isUploading[key] && ( // Bug 12: Show loading indicator
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg className="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 {(errors[key] || fileErrors[key]) && (
                   <p className="text-red-500 text-xs mt-1 flex items-center space-x-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

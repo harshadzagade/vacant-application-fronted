@@ -90,9 +90,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="studentName"
               value={formValues.studentName}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
-                errors.studentName ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${errors.studentName ? 'border-red-500' : 'border-brand-200'
+                }`}
               readOnly
               disabled={true}
             />
@@ -105,9 +104,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="dob"
               value={formValues.dob}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.dob ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.dob ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             />
             {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
@@ -118,9 +116,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="gender"
               value={formValues.gender}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.gender ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.gender ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             >
               <option value="">Select Gender</option>
@@ -136,10 +133,10 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               type="tel"
               name="mobileNo"
               value={formValues.mobileNo}
+              pattern="[0-9]*"
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
-                errors.mobileNo ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${errors.mobileNo ? 'border-red-500' : 'border-brand-200'
+                }`}
               readOnly
               disabled={true}
             />
@@ -152,9 +149,9 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="fatherMobileNo"
               value={formValues.fatherMobileNo}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.fatherMobileNo ? 'border-red-500' : 'border-brand-200'
-              }`}
+              pattern="[0-9]*"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.fatherMobileNo ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             />
             {errors.fatherMobileNo && <p className="text-red-500 text-xs mt-1">{errors.fatherMobileNo}</p>}
@@ -166,9 +163,9 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="motherMobileNo"
               value={formValues.motherMobileNo}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.motherMobileNo ? 'border-red-500' : 'border-brand-200'
-              }`}
+              pattern="[0-9]*"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.motherMobileNo ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             />
             {errors.motherMobileNo && <p className="text-red-500 text-xs mt-1">{errors.motherMobileNo}</p>}
@@ -180,9 +177,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="motherName"
               value={formValues.motherName}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.motherName ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.motherName ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             />
           </div>
@@ -193,9 +189,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="fatherName"
               value={formValues.fatherName}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                errors.fatherName ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.fatherName ? 'border-red-500' : 'border-brand-200'
+                }`}
               disabled={disabled}
             />
           </div>
@@ -206,9 +201,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
               name="email"
               value={formValues.email}
               onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${
-                errors.email ? 'border-red-500' : 'border-brand-200'
-              }`}
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition disabled:text-gray-500 disabled:bg-gray-100 ${errors.email ? 'border-red-500' : 'border-brand-200'
+                }`}
               readOnly
               disabled={true}
             />
@@ -223,9 +217,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
                   name="allIndiaMeritNo"
                   value={formValues.allIndiaMeritNo}
                   onChange={handleChange}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                    errors.allIndiaMeritNo ? 'border-red-500' : 'border-brand-200'
-                  }`}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.allIndiaMeritNo ? 'border-red-500' : 'border-brand-200'
+                    }`}
                   disabled={disabled}
                 />
               </div>
@@ -236,9 +229,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
                   name="stateMeritNo"
                   value={formValues.stateMeritNo}
                   onChange={handleChange}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${
-                    errors.stateMeritNo ? 'border-red-500' : 'border-brand-200'
-                  }`}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${errors.stateMeritNo ? 'border-red-500' : 'border-brand-200'
+                    }`}
                   disabled={disabled}
                 />
               </div>
@@ -251,9 +243,8 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
             name="address"
             value={formValues.address}
             onChange={handleChange}
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition ${
-              errors.address ? 'border-red-500' : 'border-blue-200'
-            }`}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition ${errors.address ? 'border-red-500' : 'border-blue-200'
+              }`}
             rows="4"
             disabled={disabled}
           ></textarea>

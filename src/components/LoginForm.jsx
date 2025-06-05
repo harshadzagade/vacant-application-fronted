@@ -17,8 +17,16 @@ const LoginForm = () => {
     const trimmedUsername = formData.username.trim();
     if (!trimmedUsername) newErrors.username = 'Username is required';
     else if (!/^[A-Z0-9]{8}\d{3}$/.test(trimmedUsername)) newErrors.username = 'Invalid username format (e.g., METIOM25001)';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else {
+      // Bug 3: Updated password validation to match RegistrationForm
+      // eslint-disable-next-line no-useless-escape
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]).{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        newErrors.password = 'Password must be at least 8 characters long, with at least one lowercase letter, one uppercase letter, one number, and one special character (!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~)';
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -116,6 +124,7 @@ const LoginForm = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-700 hover:text-brand-900"
+                aria-label={showPassword ? 'Hide password' : 'Show password'} // Bug 2: Added aria-label for accessibility
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
