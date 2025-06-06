@@ -504,10 +504,10 @@ const ApplicationForm = () => {
       if (value && typeof value !== 'string') formDataToSend.append(key, value);
     });
     formDataToSend.append('isFinalSubmitted', isFinal); // Match backend expectation
-    console.log('FormData sent:', {
-      formType: formDataToSend.get('formType'),
-      isFinalSubmitted: formDataToSend.get('isFinalSubmitted'),
-    }); // Debug log
+    // console.log('FormData sent:', {
+    //   formType: formDataToSend.get('formType'),
+    //   isFinalSubmitted: formDataToSend.get('isFinalSubmitted'),
+    // }); // Debug log
 
     try {
       const token = localStorage.getItem('token');
@@ -532,7 +532,7 @@ const ApplicationForm = () => {
       const data = await response.json();
 
       if (data.success) {
-        console.log('Full server response:', data); // Log the entire response
+        // console.log('Full server response:', data); // Log the entire response
         const newApplicationId = data.application?.applicationId || data.applicationId || data.id; // Check alternative keys
         if (!newApplicationId && !applicationId) {
           // If no applicationId is returned and this is a new submission, fetch the latest application
@@ -713,38 +713,50 @@ const ApplicationForm = () => {
             disabled={isFinalSubmitted}
           />
           {!isFinalSubmitted && (
-            <div className="mt-8">
+            <div className="mt-8 flex justify-between">
               {applicationId && (
-                <>
-                  <div className="flex items-center mb-4">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termsAgreed}
-                      onChange={(e) => setTermsAgreed(e.target.checked)}
-                      className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
-                    />
-                    <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
-                      I agree that the information I filled is correct and complete.
-                    </label>
-                  </div>
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={termsAgreed}
+                    onChange={(e) => setTermsAgreed(e.target.checked)}
+                    className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
+                  />
+                  <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
+                    I agree that the information I filled is correct and complete.
+                  </label>
+                </div>
+              )}
+              <div className="flex space-x-4">
+                {applicationId && (
                   <button
                     type="button"
-                    onClick={handleFinalSubmit}
-                    className="w-full mt-6 p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
-                    disabled={!termsAgreed || isFinalSubmitted}
+                    onClick={() => {
+                      if (!termsAgreed) {
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Please agree to the terms',
+                          text: 'You must agree to the terms before submitting the application.',
+                        });
+                      } else {
+                        handleFinalSubmit();
+                      }
+                    }}
+                    className="p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
+                    disabled={!termsAgreed}
                   >
                     Final Submit
                   </button>
-                </>
-              )}
-              <button
-                type="submit"
-                className="w-full mt-6 p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
-                disabled={isFinalSubmitted}
-              >
-                {applicationId ? 'Update Application' : 'Submit Application'}
-              </button>
+                )}
+                <button
+                  type="submit"
+                  className="p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
+                  disabled={isFinalSubmitted}
+                >
+                  {applicationId ? 'Update Application' : 'Submit Application'}
+                </button>
+              </div>
             </div>
           )}
           {isFinalSubmitted && (

@@ -5,6 +5,8 @@ import LoginForm from './components/LoginForm';
 import ApplicationForm from './components/ApplicationForm';
 import SubmissionConfirmation from './components/SubmissionConfirmation';
 import ViewApplication from './components/ViewApplication';
+import AdminDashboard from './components/AdminDashboard';
+import AdminLogin from './components/AdminLogin';
 import Swal from 'sweetalert2';
 
 // ProtectedRoute component to guard /application
@@ -109,6 +111,9 @@ function App() {
               }
             />
             <Route path="/" element={<Navigate to="/register" />} />
+
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </div>
       </div>

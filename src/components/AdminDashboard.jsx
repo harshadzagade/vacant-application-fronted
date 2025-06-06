@@ -1,0 +1,716 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
+
+const formTypeNames = {
+  METIPP: 'Pharmacy Diploma',
+  METIPD: 'Pharmacy Degree',
+  METIOM: 'IOM',
+  METICS: 'MCA',
+};
+
+const AdminDashboard = () => {
+  const [applications, setApplications] = useState([]);
+  const [selectedApps, setSelectedApps] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [viewDetails, setViewDetails] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Authentication Error',
+            text: 'Please log in as admin.',
+          });
+          navigate('/login');
+          return;
+        }
+        const response = await axios.get('https://vacantseats.met.edu/api/admin/applications', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data.success) {
+          setApplications(response.data.applications);
+          console.log('Fetched applications:', response.data.applications);
+        } else {
+          throw new Error(response.data.message || 'Failed to fetch applications');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error: ${error.message}`,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchApplications();
+  }, [navigate]);
+
+  const handleSelectApp = (appId) => {
+    setSelectedApps((prev) =>
+      prev.includes(appId) ? prev.filter((id) => id !== appId) : [...prev, appId]
+    );
+  };
+
+  const exportToExcel = () => {
+    if (selectedApps.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Selection',
+        text: 'Please select applications to export.',
+      });
+      return;
+    }
+    const selectedData = applications
+      .filter((app) => selectedApps.includes(app._id))
+      .map((app) => ({
+        ApplicationNo: app.applicationNo,
+        ApplicantName: `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim(),
+        Program: formTypeNames[app.formType] || 'Unknown',
+        Status: app.status,
+        Email: app.user.email,
+        Phone: app.user.phoneNo,
+      }));
+    const worksheet = XLSX.utils.json_to_sheet(selectedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+    XLSX.write(workbook, 'selected_applications.xlsx');
+  };
+
+  const changeStatus = async (appId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `https://vacantseats.met.edu/api/admin/application/${appId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        setApplications((prev) =>
+          prev.map((app) => (app._id === appId ? { ...app, status: newStatus } : app))
+        );
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated',
+          text: `Application status changed to ${newStatus}.`,
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to update status');
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error: ${error.message}`,
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    Swal.fire({
+      icon: 'success',
+      title: 'Logged Out',
+      text: 'You have successfully logged out.',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+    navigate('/login');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-blue-800 text-white transform ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-blue-700">
+          <h2 className="text-xl font-bold">Admin Dashboard</h2>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="p-4">
+          <ul className="space-y-2">
+            <li>
+              <a href="#" className="flex items-center p-2 rounded-lg bg-blue-700">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                Applications
+              </a>
+            </li>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="flex items-center p-2 rounded-lg hover:bg-blue-600 w-full text-left"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Logout
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Navbar */}
+        <header className="bg-white shadow-md p-4 flex items-center justify-between lg:hidden">
+          <button onClick={() => setSidebarOpen(true)}>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-semibold">Applications</h1>
+          <div></div>
+        </header>
+
+        {/* Content */}
+        <main className="p-6">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Applications</h2>
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Export Selected to Excel
+              </button>
+            </div>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-400">
+                  <th className="border p-3 py-2">
+                    <input
+                      type="checkbox"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedApps(applications.map((app) => app._id));
+                        } else {
+                          setSelectedApps([]);
+                        }
+                      }}
+                    />
+                  </th>
+                  <th className="border p-3 py-2 text-left">Application No.</th>
+                  <th className="border p-3 py-2 text-left">Applicant Name</th>
+                  <th className="border p-3 py-2 text-left">Program</th>
+                  <th className="border p-3 py-2 text-left">Status</th>
+                  <th className="border p-3 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((app) => (
+                  <tr key={app._id} className="hover:bg-gray-50">
+                    <td className="border p-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedApps.includes(app._id)}
+                        onChange={() => handleSelectApp(app._id)}
+                      />
+                    </td>
+                    <td className="border p-3 py-2">{app.applicationNo}</td>
+                    <td className="border p-3 py-2">{`${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim()}</td>
+                    <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
+                    <td className="border p-3 py-2">
+                      <select
+                        value={app.status}
+                        onChange={(e) => changeStatus(app._id, e.target.value)}
+                        className="border rounded p-1"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </td>
+                    <td className="border p-3 py-2">
+                      <button
+                        onClick={() => setViewDetails(app)}
+                        className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Application Details Modal */}
+          {viewDetails && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:bg-white print:inset-auto print:flex-col">
+              <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none">
+                <div className="flex justify-between items-center mb-6 print:hidden">
+                  <h3 className="text-2xl font-semibold text-gray-800">Application Details</h3>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handlePrint}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                    >
+                      Print
+                    </button>
+                    <button
+                      onClick={() => setViewDetails(null)}
+                      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+
+                {/* Personal Details */}
+                <section id="personal" className="mb-10 print:mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-xl print:mb-2">
+                    <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Personal Details
+                  </h2>
+                  <div className="border border-gray-200 p-6 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm hover:shadow-md transition-shadow print:border-gray-300 print:p-2 print:rounded-none print:bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 print:grid-cols-2 print:gap-2">
+                      <div>
+                        <span className="font-semibold text-gray-700">Application No:</span> {viewDetails.applicationNo || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Name:</span> {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim() || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-US') : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Gender:</span> {viewDetails.personal?.gender || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Email:</span> {viewDetails.user.email || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Mobile No:</span> {viewDetails.user.phoneNo || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Father's Mobile:</span> {viewDetails.personal?.fatherMobileNo || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Mother's Mobile:</span> {viewDetails.personal?.motherMobileNo || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Father's Name:</span> {viewDetails.personal?.fatherName || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Mother's Name:</span> {viewDetails.personal?.motherName || 'N/A'}
+                      </div>
+                      <div className="md:col-span-2 print:col-span-2">
+                        <span className="font-semibold text-gray-700">Address:</span> {viewDetails.personal?.address || 'N/A'}
+                      </div>
+                      {(viewDetails.formType === 'METIPP' || viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIOM') && (
+                        <>
+                          <div>
+                            <span className="font-semibold text-gray-700">All India Merit No:</span> {viewDetails.personal?.allIndiaMeritNo || 'N/A'}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-gray-700">State Merit No:</span> {viewDetails.personal?.stateMeritNo || 'N/A'}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Entrance Exam Details */}
+                <section id="entrance" className="mb-10 print:mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-lg print:mb-2">
+                    <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Entrance Exam Details
+                  </h2>
+                  <div className="space-y-6 print:space-y-2">
+                    {(() => {
+                      const entrance = viewDetails.entrance || {};
+                      const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
+
+                      return (
+                        <>
+                          <table className="hidden print:table w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="bg-gray-200">
+                                <th className="border border-gray-300 p-2"></th>
+                                {exams.map((exam) => (
+                                  <th key={exam} className="border border-gray-300 p-2">
+                                    {exam.toUpperCase()}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td className="border border-gray-300 p-2">Score</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-300 p-2">
+                                    {entrance[`${exam}Score`] || ''}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2">Percentile</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-300 p-2">
+                                    {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || ''}
+                                  </td>
+                                ))}
+                              </tr>
+                            </tbody>
+                          </table>
+
+                          <div className="print:hidden">
+                            <table className="w-full border-collapse border border-gray-200">
+                              <thead>
+                                <tr className="bg-gray-100">
+                                  <th className="border border-gray-200 p-4 text-left text-gray-800"></th>
+                                  {exams.map((exam) => (
+                                    <th key={exam} className="border border-gray-200 p-4 text-left text-gray-800">
+                                      {exam.toUpperCase()}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr className="hover:bg-gray-50">
+                                  <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
+                                  {exams.map((exam) => (
+                                    <td key={exam} className="border border-gray-200 p-4">
+                                      {entrance[`${exam}Score`] || 'N/A'}
+                                    </td>
+                                  ))}
+                                </tr>
+                                <tr className="hover:bg-gray-50">
+                                  <td className="border border-gray-200 p-4 font-semibold text-gray-700">Percentile</td>
+                                  {exams.map((exam) => (
+                                    <td key={exam} className="border border-gray-200 p-4">
+                                      {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || 'N/A'}
+                                    </td>
+                                  ))}
+                                </tr>
+                                {(viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIPP') && (
+                                  <>
+                                    <tr className="hover:bg-gray-50">
+                                      <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCB Marks</td>
+                                      <td className="border border-gray-200 p-4">{entrance.cetPcbMarks || 'N/A'}</td>
+                                      {exams.slice(1).map((exam) => (
+                                        <td key={exam} className="border border-gray-200 p-4">-</td>
+                                      ))}
+                                    </tr>
+                                    <tr className="hover:bg-gray-50">
+                                      <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCM Marks</td>
+                                      <td className="border border-gray-200 p-4">{entrance.cetPcmMarks || 'N/A'}</td>
+                                      {exams.slice(1).map((exam) => (
+                                        <td key={exam} className="border border-gray-200 p-4">-</td>
+                                      ))}
+                                    </tr>
+                                  </>
+                                )}
+                              </tbody>
+                            </table>
+                            {exams.every(
+                              (exam) => !entrance[`${exam}Score`] && !entrance[`${exam}ScorePercent`] && !entrance.percentile
+                            ) && !(viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIPP') && (
+                              <div className="text-gray-600 p-4">No entrance exam details available</div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </section>
+
+                {/* Education Details */}
+                <section id="education" className="mb-10 print:mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-lg print:mb-2">
+                    <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01-1.946 5.611M12 14L5.84 10.578a12.083 12.083 0 01-1.946-5.611M12 14v7m-9-7v7m18-7v7" />
+                    </svg>
+                    Educational Qualification
+                  </h2>
+                  <div className="space-y-6 print:space-y-2">
+                    {(() => {
+                      const education = viewDetails.education || {};
+                      let levels = [];
+                      switch (viewDetails.formType) {
+                        case 'METIPP':
+                        case 'METIPD':
+                          levels = ['hsc'];
+                          break;
+                        case 'METICS':
+                          levels = ['ssc', 'hsc', 'graduation'];
+                          break;
+                        case 'METIOM':
+                          levels = ['hsc', 'graduation'];
+                          break;
+                        default:
+                          levels = [];
+                      }
+
+                      const hasEducationData = levels.some((level) => education[level]);
+                      const fields = [
+                        'Board/University',
+                        'School/College',
+                        'Stream',
+                        'Marks Obtained',
+                        'Aggregate %',
+                        'Year',
+                      ];
+                      if (viewDetails.formType === 'METIPP' || viewDetails.formType === 'METIPD') {
+                        fields.push('PCM Marks', 'PCB Marks');
+                        if (viewDetails.formType === 'METIPP') {
+                          fields.push('English Marks');
+                        }
+                      }
+                      if (viewDetails.formType === 'METIOM') {
+                        fields.push('Status');
+                      }
+
+                      return (
+                        <>
+                          <table className="hidden print:table w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="bg-gray-200">
+                                <th className="border border-gray-300 p-2">Sr. No.</th>
+                                <th className="border border-gray-300 p-2">Qualification</th>
+                                <th className="border border-gray-300 p-2">Marks</th>
+                                <th className="border border-gray-300 p-2">Aggregate %</th>
+                                <th className="border border-gray-300 p-2">Stream</th>
+                                <th className="border border-gray-300 p-2">Passing Year</th>
+                                <th className="border border-gray-300 p-2">Board/University</th>
+                                <th className="border border-gray-300 p-2">School/College</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {levels.map((level, index) => (
+                                education[level] && (
+                                  <tr key={level}>
+                                    <td className="border border-gray-300 p-2">{index + 1}.</td>
+                                    <td className="border border-gray-300 p-2">{level.toUpperCase()}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].marks || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].percent || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].stream || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].year || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].board || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].school || 'N/A'}</td>
+                                  </tr>
+                                )
+                              ))}
+                            </tbody>
+                          </table>
+
+                          <div className="print:hidden">
+                            {hasEducationData ? (
+                              <table className="w-full border-collapse border border-gray-200">
+                                <thead>
+                                  <tr className="bg-gray-100">
+                                    <th className="border border-gray-200 p-4 text-left text-gray-800">Qualification</th>
+                                    {fields.map((field) => (
+                                      <th key={field} className="border border-gray-200 p-4 text-left text-gray-800">
+                                        {field}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {levels.map((level) => (
+                                    education[level] && (
+                                      <tr key={level} className="hover:bg-gray-50">
+                                        <td className="border border-gray-200 p-4 font-semibold text-gray-700">{level.toUpperCase()}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].board || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].school || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].stream || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].marks || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].percent || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].year || 'N/A'}</td>
+                                        {(viewDetails.formType === 'METIPP' || viewDetails.formType === 'METIPD') && (
+                                          <>
+                                            <td className="border border-gray-200 p-4">{education[level].pcmMarks || 'N/A'}</td>
+                                            <td className="border border-gray-200 p-4">{education[level].pcbMarks || 'N/A'}</td>
+                                          </>
+                                        )}
+                                        {viewDetails.formType === 'METIPP' && (
+                                          <td className="border border-gray-200 p-4">{education[level].englishMarks || 'N/A'}</td>
+                                        )}
+                                        {viewDetails.formType === 'METIOM' && (
+                                          <td className="border border-gray-200 p-4">
+                                            {level === 'graduation' ? education[level].status || 'N/A' : '-'}
+                                          </td>
+                                        )}
+                                      </tr>
+                                    )
+                                  ))}
+                                </tbody>
+                              </table>
+                            ) : (
+                              <div className="text-gray-600 p-4">No education details available</div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </section>
+
+                {/* Documents */}
+                <section id="documents" className="mb-10 print:mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-xl print:mb-2">
+                    <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Documents Uploaded
+                  </h2>
+                  <div className="border border-gray-200 p-6 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm hover:shadow-md transition-shadow print:border-gray-300 print:p-2 print:rounded-none print:bg-white">
+                    {Object.keys(viewDetails.documents || {}).length > 0 ? (
+                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 print:gap-2">
+                        {Object.keys(viewDetails.documents).map((doc) => (
+                          viewDetails.documents[doc] && (
+                            <li key={doc} className="text-gray-800 flex items-center">
+                              <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              {doc.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                            </li>
+                          )
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-600">No documents uploaded</div>
+                    )}
+                  </div>
+                </section>
+
+                {/* Declaration and Note */}
+                <section id="declaration" className="mb-10 print:mb-4">
+                  <p className="text-gray-800 mb-4">
+                    I, {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim()}, declare that the information given above is true to the best of my knowledge & belief.
+                  </p>
+                  <p className="text-gray-800">
+                    <strong>Date:</strong> {viewDetails.personal?.submissionDate ? new Date(viewDetails.personal.submissionDate).toLocaleDateString('en-US') : 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-6 print:mt-2">
+                    Note: The applicant should have passed a minimum three-year duration Bachelor's Degree awarded by any of the Universities recognized by the University Grants Commission or Association of Indian Universities in any discipline with at least 50% marks in aggregate or equivalent.
+                  </p>
+                </section>
+              </div>
+
+              {/* Print Styles */}
+              <style>
+                {`
+                  @media print {
+                    body {
+                      background: white;
+                      margin: 0;
+                    }
+                    .fixed.inset-0 {
+                      position: static !important;
+                      background: white !important;
+                    }
+                    .max-h-[80vh] {
+                      max-height: none !important;
+                    }
+                    .overflow-y-auto {
+                      overflow: visible !important;
+                    }
+                    .print\\:shadow-none {
+                      box-shadow: none !important;
+                    }
+                    .print\\:p-4 {
+                      padding: 1rem !important;
+                    }
+                    .print\\:rounded-none {
+                      border-radius: 0 !important;
+                    }
+                    .print\\:max-w-none {
+                      max-width: none !important;
+                    }
+                    .print\\:bg-white {
+                      background: white !important;
+                    }
+                    .print\\:hidden {
+                      display: none !important;
+                    }
+                    h2 {
+                      font-size: 1.25rem !important;
+                      margin-bottom: 0.5rem !important;
+                    }
+                    .border-gray-200 {
+                      border: 1px solid #ccc !important;
+                    }
+                    .shadow-sm, .hover\\:shadow-md {
+                      box-shadow: none !important;
+                    }
+                    .rounded-xl {
+                      border-radius: 0 !important;
+                    }
+                    .bg-gradient-to-b {
+                      background: #fff !important;
+                    }
+                    .grid {
+                      gap: 0.25rem !important;
+                    }
+                    .space-y-6 > * + * {
+                      margin-top: 0.5rem !important;
+                    }
+                    .text-gray-800, .text-gray-700, .text-gray-600 {
+                      color: #000 !important;
+                    }
+                    svg {
+                      display: none !important;
+                    }
+                    @page {
+                      margin: 15mm;
+                    }
+                  }
+                `}
+              </style>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
