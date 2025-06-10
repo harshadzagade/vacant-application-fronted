@@ -5,11 +5,12 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
   const [selectedExams, setSelectedExams] = useState([]);
   const [formValues, setFormValues] = useState({});
   const lastSyncedValues = useRef(null);
+  const [internalErrors, setInternalErrors] = useState({});
+
 
   useEffect(() => {
     if (!initialData) return;
 
-    // Prepare new form values
     const newFormValues = {
       cetApplicationId: initialData.cetApplicationId || '',
       cetScore: initialData.cetScore || '',
@@ -37,7 +38,6 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       percentile: initialData.percentile || '',
     };
 
-    // Compute selected exams
     const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
     const newSelectedExams = exams.filter(
       (exam) =>
@@ -46,15 +46,16 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
         initialData[`${exam}ScorePercent`]
     );
 
-    setFormValues(newFormValues);
-    setSelectedExams(newSelectedExams);
+    const hasChanged = JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current);
 
-    // Sync with parent
-    if (JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current)) {
+    if (hasChanged) {
+      setFormValues(newFormValues);
+      setSelectedExams(newSelectedExams);
       onUpdate(newFormValues);
       lastSyncedValues.current = newFormValues;
     }
-  }, [initialData, onUpdate]); // Removed formValues and selectedExams from dependencies
+  }, [initialData, onUpdate]);
+  // Removed formValues and selectedExams from dependencies
 
   // Sync formValues with parent on every change
   useEffect(() => {
@@ -66,7 +67,22 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    let error = '';
+    if (name.includes('ScorePercent')) {
+      const val = parseFloat(value);
+      if (isNaN(val) || val < 0 || val > 100) error = 'Percentile must be 0-100';
+    } else if (name.includes('Score')) {
+      const val = parseFloat(value);
+      if (isNaN(val) || val < 0 || val > 200) error = 'Score must be 0-200';
+    }
+
+    const updatedValues = { ...formValues, [name]: value };
+    const updatedErrors = { ...internalErrors, [name]: error };
+
+    setFormValues(updatedValues);
+    setInternalErrors(updatedErrors);
+
+    onUpdate({ values: updatedValues, errors: updatedErrors });
   };
 
   const handleExamToggle = (exam) => {

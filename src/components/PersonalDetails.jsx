@@ -34,34 +34,15 @@ const PersonalDetails = ({ formType, onUpdate, errors, userData, initialData, di
       address: initialData.address || '',
     };
 
-    // Update formValues without triggering an infinite loop
-    setFormValues(initialValues);
+    const hasChanged = JSON.stringify(initialValues) !== JSON.stringify(lastSyncedValues.current);
 
-    // Defer the onUpdate call
-    const readOnlyFields = {
-      studentName: initialValues.studentName,
-      mobileNo: initialValues.mobileNo,
-      email: initialValues.email,
-    };
-    if (
-      JSON.stringify(readOnlyFields) !==
-      JSON.stringify({
-        studentName: lastSyncedValues.current?.studentName,
-        mobileNo: lastSyncedValues.current?.mobileNo,
-        email: lastSyncedValues.current?.email,
-      })
-    ) {
-      setTimeout(() => {
-        onUpdate(initialValues);
-        lastSyncedValues.current = initialValues;
-      }, 0);
-    } else if (JSON.stringify(initialValues) !== JSON.stringify(lastSyncedValues.current)) {
-      setTimeout(() => {
-        onUpdate(initialValues);
-        lastSyncedValues.current = initialValues;
-      }, 0);
+    if (hasChanged) {
+      setFormValues(initialValues);
+      onUpdate(initialValues);
+      lastSyncedValues.current = initialValues;
     }
-  }, [userData, initialData, onUpdate]); // Removed formValues from dependencies
+  }, [userData, initialData, onUpdate]);
+  // Removed formValues from dependencies
 
   const handleChange = (e) => {
     const { name, value } = e.target;

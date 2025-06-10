@@ -12,6 +12,7 @@ const formTypeNames = {
 };
 
 const AdminDashboard = () => {
+  const [profile, setProfile] = useState(null);
   const [applications, setApplications] = useState([]);
   const [selectedApps, setSelectedApps] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,280 +21,246 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchApplications = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Swal.fire({ icon: 'error', title: 'Auth Required', text: 'Please log in.' });
+      navigate('/admin/login');
+      return;
+    }
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const loadData = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Authentication Error',
-            text: 'Please log in as admin.',
-          });
-          navigate('/login');
-          return;
-        }
-        const response = await axios.get('https://vacantseats.met.edu/api/admin/applications', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.data.success) {
-          setApplications(response.data.applications);
-          console.log('Fetched applications:', response.data.applications);
-        } else {
-          throw new Error(response.data.message || 'Failed to fetch applications');
-        }
+        const profRes = await axios.get('https://vacantseats.met.edu/api/admin/auth/profile', { headers });
+        if (profRes.data.success) setProfile(profRes.data.staff);
+        else throw new Error(profRes.data.message || 'Failed to load profile');
+
+        const appsRes = await axios.get('https://vacantseats.met.edu/api/admin/applications', { headers });
+        console.log('appsRes', appsRes.data.applications);
+
+        if (appsRes.data.success) setApplications(appsRes.data.applications);
+        else throw new Error(appsRes.data.message || 'Failed to load applications');
       } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: `Error: ${error.message}`,
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message });
       } finally {
         setIsLoading(false);
       }
     };
-    fetchApplications();
+
+    loadData();
   }, [navigate]);
 
-  const handleSelectApp = (appId) => {
-    setSelectedApps((prev) =>
-      prev.includes(appId) ? prev.filter((id) => id !== appId) : [...prev, appId]
-    );
-  };
-
-  const exportToExcel = () => {
-    if (selectedApps.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No Selection',
-        text: 'Please select applications to export.',
-      });
-      return;
+  const openDetails = async (applicationId) => {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+    setIsLoading(true);
+    try {
+      const res = await axios.get(
+        `https://vacantseats.met.edu/api/admin/applications/details/${applicationId}`,
+        { headers }
+      );
+      if (res.data.success) setViewDetails(res.data.application);
+      else throw new Error(res.data.message || 'Failed to load details');
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    } finally {
+      setIsLoading(false);
     }
-    const selectedData = applications
-      .filter((app) => selectedApps.includes(app._id))
-      .map((app) => ({
-        ApplicationNo: app.applicationNo,
-        ApplicantName: `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim(),
-        Program: formTypeNames[app.formType] || 'Unknown',
-        Status: app.status,
-        Email: app.user.email,
-        Phone: app.user.phoneNo,
-      }));
-    const worksheet = XLSX.utils.json_to_sheet(selectedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
-    XLSX.write(workbook, 'selected_applications.xlsx');
   };
 
-  const changeStatus = async (appId, newStatus) => {
+  const changeStatus = async (applicationId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(
-        `https://vacantseats.met.edu/api/admin/application/${appId}/status`,
+      const res = await axios.put(
+        `https://vacantseats.met.edu/api/admin/application/${applicationId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data.success) {
-        setApplications((prev) =>
-          prev.map((app) => (app._id === appId ? { ...app, status: newStatus } : app))
-        );
-        Swal.fire({
-          icon: 'success',
-          title: 'Status Updated',
-          text: `Application status changed to ${newStatus}.`,
-        });
-      } else {
-        throw new Error(response.data.message || 'Failed to update status');
-      }
+      if (res.data.success) {
+        setApplications(prev => prev.map(app => app.applicationId === applicationId ? { ...app, status: newStatus } : app));
+        Swal.fire({ icon: 'success', title: 'Status Updated', text: `Status changed to ${newStatus}` });
+      } else throw new Error(res.data.message || 'Failed to update status');
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Error: ${error.message}`,
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
     }
   };
 
+  const exportToExcel = () => {
+    if (!selectedApps.length) {
+      Swal.fire({ icon: 'warning', title: 'No Selection', text: 'Please select applications.' });
+      return;
+    }
+
+    const data = applications
+      .filter(app => selectedApps.includes(app.applicationId))
+      .map(app => {
+        const entrance = app.entrance || {};
+        const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
+
+        // Prepare entrance exam details
+        const entranceDetails = entrance.cetScore
+          ? `CET: ${entrance.cetScore}, Percentile: ${entrance.cetScorePercent || entrance.percentile || 'N/A'}`
+          : 'N/A';
+
+        // Prepare structured entrance exam data
+        const entranceExams = exams.map(exam => ({
+          name: exam.toUpperCase(),
+          score: entrance[`${exam}Score`] || 'N/A',
+          percentile: exam === 'cet' ? (entrance.cetScorePercent || entrance.percentile || 'N/A') : (entrance[`${exam}ScorePercent`] || 'N/A'),
+          applicationId: entrance[`${exam}ApplicationId`] || 'N/A',
+        }));
+
+        // Prepare flattened entrance exam fields for Excel
+        const entranceFields = {};
+        entranceExams.forEach(exam => {
+          entranceFields[`${exam.name}_Score`] = exam.score;
+          entranceFields[`${exam.name}_Percentile`] = exam.percentile;
+          entranceFields[`${exam.name}_ApplicationId`] = exam.applicationId;
+        });
+
+        // Prepare education details
+        const educationFields = {};
+        if (app.education) {
+          Object.entries(app.education).forEach(([key, value]) => {
+            educationFields[`Education_${key.toUpperCase()}_Board`] = value.board || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_School`] = value.school || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_Stream`] = value.stream || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_Marks`] = value.marks || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_Percent`] = value.percent || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_Year`] = value.year || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_PCMMarks`] = value.pcmMarks || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_PCBMarks`] = value.pcbMarks || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_EnglishMarks`] = value.englishMarks || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_Status`] = value.graduationStatus || 'N/A';
+          });
+        }
+
+        // Prepare document details
+        const documentFields = {};
+        if (app.documents) {
+          Object.entries(app.documents).forEach(([key, path]) => {
+            documentFields[`Document_${key}`] = path || 'N/A';
+          });
+        }
+
+        return {
+          ApplicationId: app.applicationId,
+          ApplicationNo: app.applicationNo,
+          ApplicantName: `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim(),
+          Program: formTypeNames[app.formType] || 'Unknown',
+          Status: app.status,
+          Email: app.user.email || 'N/A',
+          Phone: app.user.phoneNo || 'N/A',
+          DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-US') : 'N/A',
+          Gender: app.personal?.gender || 'N/A',
+          FatherName: app.personal?.fatherName || 'N/A',
+          FatherMobileNo: app.personal?.fatherMobileNo || 'N/A',
+          MotherName: app.personal?.motherName || 'N/A',
+          MotherMobileNo: app.personal?.motherMobileNo || 'N/A',
+          Address: app.personal?.address || 'N/A',
+          AllIndiaMeritNo: app.personal?.allIndiaMeritNo || 'N/A',
+          StateMeritNo: app.personal?.stateMeritNo || 'N/A',
+          ApplicationDate: app.applicationDate ? new Date(app.applicationDate).toLocaleDateString('en-US') : 'N/A',
+          SubmissionDate: app.submissionDate ? new Date(app.submissionDate).toLocaleDateString('en-US') : 'N/A',
+          InstituteName: app.institute?.name || 'N/A',
+          EntranceDetails: entranceDetails,
+          ...entranceFields,
+          ...educationFields,
+          ...documentFields,
+        };
+      });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Applications');
+    XLSX.writeFile(wb, 'selected_applications.xlsx');
+  };
+
+  const handleSelect = id => setSelectedApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
-    Swal.fire({
-      icon: 'success',
-      title: 'Logged Out',
-      text: 'You have successfully logged out.',
-      timer: 1500,
-      showConfirmButton: false,
-    });
-    navigate('/login');
+    Swal.fire({ icon: 'success', title: 'Logged Out', timer: 1500, showConfirmButton: false });
+    navigate('/admin/login');
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+    </div>
+  );
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-blue-800 text-white transform ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-blue-700">
-          <h2 className="text-xl font-bold">Admin Dashboard</h2>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-blue-800 text-white transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="p-4 border-b border-blue-700">
+          <p className="text-sm">Signed in as:</p>
+          <p className="font-semibold">{profile?.firstName} {profile?.lastName}</p>
+          <p className="text-xs italic">{profile?.institute?.instituteName}</p>
         </div>
         <nav className="p-4">
           <ul className="space-y-2">
-            <li>
-              <a href="#" className="flex items-center p-2 rounded-lg bg-blue-700">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                Applications
-              </a>
-            </li>
-            <li>
-              <button
-                onClick={handleLogout}
-                className="flex items-center p-2 rounded-lg hover:bg-blue-600 w-full text-left"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-                Logout
-              </button>
-            </li>
+            <li><a href="#" className="flex items-center p-2 rounded-lg bg-blue-700">Applications</a></li>
+            <li><button onClick={handleLogout} className="flex items-center p-2 rounded-lg hover:bg-blue-600 w-full text-left">Logout</button></li>
           </ul>
         </nav>
       </aside>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex-1 flex flex-col">
-        {/* Navbar */}
-        <header className="bg-white shadow-md p-4 flex items-center justify-between lg:hidden">
-          <button onClick={() => setSidebarOpen(true)}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+        <header className="bg-white shadow-md p-4 flex items-center justify-between print:hidden">
+          <button onClick={() => setSidebarOpen(true)}><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
           <h1 className="text-xl font-semibold">Applications</h1>
-          <div></div>
         </header>
 
-        {/* Content */}
         <main className="p-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Applications</h2>
-              <button
-                onClick={exportToExcel}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Export Selected to Excel
-              </button>
+          {/* hide applications list on print */}
+          <div className="print:hidden">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                {/* <h2 className="text-2xl font-semibold">Applications</h2> */}
+                <button onClick={exportToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export Selected to Excel</button>
+              </div>
+              <table className="w-full border-collapse">
+                <thead><tr className="bg-gray-400"><th className="border p-3 py-2"><input type="checkbox" onChange={e => e.target.checked ? setSelectedApps(applications.map(a => a.applicationId)) : setSelectedApps([])} /></th><th className="border p-3 py-2 text-left">Application No.</th><th className="border p-3 py-2 text-left">Applicant Name</th><th className="border p-3 py-2 text-left">Program</th><th className="border p-3 py-2 text-left">Status</th><th className="border p-3 py-2 text-left">Actions</th></tr></thead>
+                <tbody>
+                  {applications.map(app => (
+                    <tr key={app.applicationId} className="hover:bg-gray-50">
+                      <td className="border p-3 py-2"><input type="checkbox" checked={selectedApps.includes(app.applicationId)} onChange={() => handleSelect(app.applicationId)} /></td>
+                      <td className="border p-3 py-2">{app.applicationNo}</td>
+                      <td className="border p-3 py-2">{`${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim()}</td>
+                      <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
+                      <td className="border p-3 py-2"><select value={app.status} onChange={e => changeStatus(app.applicationId, e.target.value)} className="border rounded p-1"><option value={app.status}>{app.status}</option><option value="draft">Draft</option></select></td>
+                      <td className="border p-3 py-2"><button onClick={() => openDetails(app.applicationId)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">View Details</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-400">
-                  <th className="border p-3 py-2">
-                    <input
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedApps(applications.map((app) => app._id));
-                        } else {
-                          setSelectedApps([]);
-                        }
-                      }}
-                    />
-                  </th>
-                  <th className="border p-3 py-2 text-left">Application No.</th>
-                  <th className="border p-3 py-2 text-left">Applicant Name</th>
-                  <th className="border p-3 py-2 text-left">Program</th>
-                  <th className="border p-3 py-2 text-left">Status</th>
-                  <th className="border p-3 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app) => (
-                  <tr key={app._id} className="hover:bg-gray-50">
-                    <td className="border p-3 py-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedApps.includes(app._id)}
-                        onChange={() => handleSelectApp(app._id)}
-                      />
-                    </td>
-                    <td className="border p-3 py-2">{app.applicationNo}</td>
-                    <td className="border p-3 py-2">{`${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim()}</td>
-                    <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
-                    <td className="border p-3 py-2">
-                      <select
-                        value={app.status}
-                        onChange={(e) => changeStatus(app._id, e.target.value)}
-                        className="border rounded p-1"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                    </td>
-                    <td className="border p-3 py-2">
-                      <button
-                        onClick={() => setViewDetails(app)}
-                        className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
 
           {/* Application Details Modal */}
           {viewDetails && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:bg-white print:inset-auto print:flex-col">
+              {/* Print-only header */}
+              <div className="hidden print:block border-b border-gray-300 pb-4 w-full text-center">
+                <div className="flex flex-col items-center justify-center mb-2">
+                  <h1 className="text-2xl font-bold">{profile?.institute?.instituteName || 'MET Institute'}</h1>
+                </div>
+                <h2 className="text-xl font-semibold mb-2">Application Form for {profile?.institute?.instituteName || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
+                <p className="text-sm">Academic Year: 2025-2026</p>
+              </div>
               <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none">
                 <div className="flex justify-between items-center mb-6 print:hidden">
                   <h3 className="text-2xl font-semibold text-gray-800">Application Details</h3>
                   <div className="flex gap-3">
-                    <button
-                      onClick={handlePrint}
-                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                    >
-                      Print
-                    </button>
-                    <button
-                      onClick={() => setViewDetails(null)}
-                      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-                    >
-                      Close
-                    </button>
+                    <button onClick={handlePrint} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">Print</button>
+                    <button onClick={() => setViewDetails(null)} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">Close</button>
                   </div>
                 </div>
 
@@ -413,7 +380,7 @@ const AdminDashboard = () => {
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr className="hover:bg-gray-50">
+                                <tr key="score" className="hover:bg-gray-50">
                                   <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
                                   {exams.map((exam) => (
                                     <td key={exam} className="border border-gray-200 p-4">
@@ -421,7 +388,7 @@ const AdminDashboard = () => {
                                     </td>
                                   ))}
                                 </tr>
-                                <tr className="hover:bg-gray-50">
+                                <tr key="percentile" className="hover:bg-gray-50">
                                   <td className="border border-gray-200 p-4 font-semibold text-gray-700">Percentile</td>
                                   {exams.map((exam) => (
                                     <td key={exam} className="border border-gray-200 p-4">
@@ -431,14 +398,14 @@ const AdminDashboard = () => {
                                 </tr>
                                 {(viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIPP') && (
                                   <>
-                                    <tr className="hover:bg-gray-50">
+                                    <tr key="cet-pcb-marks" className="hover:bg-gray-50">
                                       <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCB Marks</td>
                                       <td className="border border-gray-200 p-4">{entrance.cetPcbMarks || 'N/A'}</td>
                                       {exams.slice(1).map((exam) => (
                                         <td key={exam} className="border border-gray-200 p-4">-</td>
                                       ))}
                                     </tr>
-                                    <tr className="hover:bg-gray-50">
+                                    <tr key="cet-pcm-marks" className="hover:bg-gray-50">
                                       <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCM Marks</td>
                                       <td className="border border-gray-200 p-4">{entrance.cetPcmMarks || 'N/A'}</td>
                                       {exams.slice(1).map((exam) => (
@@ -452,8 +419,8 @@ const AdminDashboard = () => {
                             {exams.every(
                               (exam) => !entrance[`${exam}Score`] && !entrance[`${exam}ScorePercent`] && !entrance.percentile
                             ) && !(viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIPP') && (
-                              <div className="text-gray-600 p-4">No entrance exam details available</div>
-                            )}
+                                <div className="text-gray-600 p-4">No entrance exam details available</div>
+                              )}
                           </div>
                         </>
                       );
@@ -593,7 +560,7 @@ const AdminDashboard = () => {
                   </div>
                 </section>
 
-                {/* Documents */}
+                {/* Documents Uploaded */}
                 <section id="documents" className="mb-10 print:mb-4">
                   <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-xl print:mb-2">
                     <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -601,22 +568,29 @@ const AdminDashboard = () => {
                     </svg>
                     Documents Uploaded
                   </h2>
-                  <div className="border border-gray-200 p-6 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm hover:shadow-md transition-shadow print:border-gray-300 print:p-2 print:rounded-none print:bg-white">
+                  <div className="border border-gray-200 p-6 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm hover:shadow-md transition-shadow print:border-gray-300 print:p-2 print:rounded-none print:bg-white flex flex-col">
                     {Object.keys(viewDetails.documents || {}).length > 0 ? (
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 print:gap-2">
-                        {Object.keys(viewDetails.documents).map((doc) => (
-                          viewDetails.documents[doc] && (
-                            <li key={doc} className="text-gray-800 flex items-center">
-                              <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                              {doc.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                      <ul className="flex flex-wrap gap-4 print:gap-2">
+                        {Object.entries(viewDetails.documents).map(([key, path]) => (
+                          path && (
+                            <li key={key} className="flex-1 md:flex-1/2 xl:flex-1/3 print:w-1/2">
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <div>
+                                  <a href={`https://vacantseats.met.edu/${path}`} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 print:no-underline print:text-black">
+                                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                  </a>
+                                  {/* <span className="block text-sm text-gray-600 print:inline print:text-black">https://vacantseats.met.edu/{path}</span> */}
+                                </div>
+                              </div>
                             </li>
                           )
                         ))}
                       </ul>
                     ) : (
-                      <div className="text-gray-600">No documents uploaded</div>
+                      <div className="text-gray-600 flex-1">No documents uploaded</div>
                     )}
                   </div>
                 </section>
@@ -633,6 +607,51 @@ const AdminDashboard = () => {
                     Note: The applicant should have passed a minimum three-year duration Bachelor's Degree awarded by any of the Universities recognized by the University Grants Commission or Association of Indian Universities in any discipline with at least 50% marks in aggregate or equivalent.
                   </p>
                 </section>
+
+                {/* right side -   Signature */}
+                <section id="signature" className="mb-10 print:mb-4 flex flex-col items-end">
+                  <p className="text-gray-800">
+                    <strong>{viewDetails.user?.firstName + ' ' + viewDetails.user?.lastName || 'Signature'}</strong> {viewDetails.documents?.signaturePhoto ? (
+                      <img
+                        src={`https://vacantseats.met.edu/${viewDetails.documents.signaturePhoto}`}
+                        alt="Signature"
+                        className="w-32 h-20 object-contain mt-2"
+                        style={{ maxWidth: '100%' }}
+                      />
+                    ) : (
+                      'N/A'
+                    )}
+                  </p>
+                </section>
+
+                {Object.entries(viewDetails.documents).map(([key, path],) => (
+                  path && (
+                    <div
+                      key={key}
+                      className="hidden print:block break-after-page mb-4"
+                    >
+                      <h3 className="text-lg font-semibold mb-2 text-center">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </h3>
+
+                      {path.endsWith('.pdf') ? (
+                        <iframe
+                          src={`https://vacantseats.met.edu/${path}`}
+                          className="w-full h-[1000px]"
+                          title={key}
+                        />
+                      ) : (
+                        <img
+                          src={`https://vacantseats.met.edu/${path}`}
+                          alt={key}
+                          className="mx-auto max-w-full h-auto"
+                        />
+                      )}
+                    </div>
+                  )
+                ))}
+
+
               </div>
 
               {/* Print Styles */}
@@ -700,7 +719,8 @@ const AdminDashboard = () => {
                       display: none !important;
                     }
                     @page {
-                      margin: 15mm;
+                      size: auto;
+                      margin: 0.2in;
                     }
                   }
                 `}

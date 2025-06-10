@@ -37,6 +37,9 @@ const ApplicationForm = () => {
   const educationData = useMemo(() => formData.education, [formData.education]);
   const documentsData = useMemo(() => formData.documents, [formData.documents]);
 
+  const educationErrorsRef = useRef({});
+  const entranceErrorsRef = useRef({});
+
   useEffect(() => {
     const fetchUserDataAndApplication = async () => {
       setIsLoading(true);
@@ -293,6 +296,8 @@ const ApplicationForm = () => {
       }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
+        newErrors['hsc.school'] = 'School Name is required';
+        newErrors['hsc.stream'] = 'Stream is required';
         newErrors['hsc.marks'] = 'HSC Marks are required';
         newErrors['hsc.percent'] = 'HSC Percentage is required';
         errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
@@ -317,7 +322,7 @@ const ApplicationForm = () => {
       if (!formData.entrance.cetScore) {
         newErrors.cetScore = 'CET Score is required';
         errorMessages.push('CET Score');
-      } else if (formData.entrance.cetScore < 0) {
+      } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
         newErrors.cetScore = 'CET Score cannot be negative';
         errorMessages.push('CET Score (cannot be negative)');
       }
@@ -331,14 +336,14 @@ const ApplicationForm = () => {
       if (!formData.entrance.cetPcbMarks) {
         newErrors.cetPcbMarks = 'CET-PCB Marks are required';
         errorMessages.push('CET-PCB Marks');
-      } else if (formData.entrance.cetPcbMarks < 0) {
+      } else if (formData.entrance.cetPcbMarks < 0 || formData.entrance.cetPcbMarks > 100) {
         newErrors.cetPcbMarks = 'CET-PCB Marks cannot be negative';
         errorMessages.push('CET-PCB Marks (cannot be negative)');
       }
       if (!formData.entrance.cetPcmMarks) {
         newErrors.cetPcmMarks = 'CET-PCM Marks are required';
         errorMessages.push('CET-PCM Marks');
-      } else if (formData.entrance.cetPcmMarks < 0) {
+      } else if (formData.entrance.cetPcmMarks < 0 || formData.entrance.cetPcmMarks > 100) {
         newErrors.cetPcmMarks = 'CET-PCM Marks cannot be negative';
         errorMessages.push('CET-PCM Marks (cannot be negative)');
       }
@@ -355,6 +360,8 @@ const ApplicationForm = () => {
       }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
+        newErrors['hsc.school'] = 'School Name is required';
+        newErrors['hsc.stream'] = 'Stream is required';
         newErrors['hsc.marks'] = 'HSC Marks is required';
         newErrors['hsc.percent'] = 'HSC Percentage is required';
         errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
@@ -362,6 +369,14 @@ const ApplicationForm = () => {
         if (!formData.education.hsc.board) {
           newErrors['hsc.board'] = 'HSC Board is required';
           errorMessages.push('HSC Board');
+        }
+        if (!formData.education.hsc.school) {
+          newErrors['hsc.school'] = 'HSC School Name is required';
+          errorMessages.push('HSC School Name');
+        }
+        if (!formData.education.hsc.stream) {
+          newErrors['hsc.stream'] = 'HSC Stream is required';
+          errorMessages.push('HSC Stream');
         }
         if (!formData.education.hsc.marks) {
           newErrors['hsc.marks'] = 'HSC Marks is required';
@@ -403,7 +418,7 @@ const ApplicationForm = () => {
           if (!formData.entrance[`${exam}Score`]) {
             newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score is required`;
             errorMessages.push(`${exam.toUpperCase()} Score`);
-          } else if (formData.entrance[`${exam}Score`] < 0) {
+          } else if (formData.entrance[`${exam}Score`] < 0 || formData.entrance[`${exam}Score`] > 200) {
             newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score cannot be negative`;
             errorMessages.push(`${exam.toUpperCase()} Score (cannot be negative)`);
           }
@@ -426,6 +441,8 @@ const ApplicationForm = () => {
       ['ssc', 'hsc', 'graduation'].forEach((level) => {
         if (!formData.education[level]) {
           newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
+          newErrors[`${level}.school`] = `${level.toUpperCase()} School Name is required`;
+          newErrors[`${level}.stream`] = `${level.toUpperCase()} Stream is required`;
           newErrors[`${level}.marks`] = `${level.toUpperCase()} Marks is required`;
           newErrors[`${level}.percent`] = `${level.toUpperCase()} Percentage is required`;
           errorMessages.push(`${level.toUpperCase()} Board`, `${level.toUpperCase()} Marks`, `${level.toUpperCase()} Percentage`);
@@ -434,13 +451,13 @@ const ApplicationForm = () => {
             newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
             errorMessages.push(`${level.toUpperCase()} Board`);
           }
-          if (!formData.education[level].marks) {
-            newErrors[`${level}.marks`] = `${level.toUpperCase()} Marks is required`;
-            errorMessages.push(`${level.toUpperCase()} Marks`);
+          if (!formData.education[level].school) {
+            newErrors[`${level}.school`] = `${level.toUpperCase()} School Name is required`;
+            errorMessages.push(`${level.toUpperCase()} School Name`);
           }
-          if (!formData.education[level].percent) {
-            newErrors[`${level}.percent`] = `${level.toUpperCase()} Percentage is required`;
-            errorMessages.push(`${level.toUpperCase()} Percentage`);
+          if (!formData.education[level].stream) {
+            newErrors[`${level}.stream`] = `${level.toUpperCase()} Stream is required`;
+            errorMessages.push(`${level.toUpperCase()} Stream`);
           }
         }
       });
@@ -451,7 +468,7 @@ const ApplicationForm = () => {
       if (!formData.entrance.cetScore) {
         newErrors.cetScore = 'CET Score is required';
         errorMessages.push('CET Score');
-      } else if (formData.entrance.cetScore < 0) {
+      } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
         newErrors.cetScore = 'CET Score cannot be negative';
         errorMessages.push('CET Score (cannot be negative)');
       }
@@ -464,7 +481,11 @@ const ApplicationForm = () => {
       }
     }
 
-    setErrors(newErrors);
+    const internalEduErrors = educationErrorsRef.current || {};
+    const internalEntErrors = entranceErrorsRef.current || {};
+    const mergedErrors = { ...newErrors, ...internalEduErrors, ...internalEntErrors };
+
+    setErrors(mergedErrors);
     if (errorMessages.length > 0) {
       Swal.fire({
         icon: 'error',
@@ -472,7 +493,8 @@ const ApplicationForm = () => {
         text: `Please verify or correct the following required fields: ${errorMessages.join(', ')}`,
       });
     }
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(mergedErrors).every((key) => !mergedErrors[key]);
+
   };
 
   const handleSubmit = async (e, isFinal = false) => {
@@ -551,7 +573,7 @@ const ApplicationForm = () => {
               title: isFinal ? 'Final Submission Successful' : 'Application Submitted',
               text: isFinal
                 ? 'Your application has been successfully submitted.'
-                : `Application submitted successfully: ${latestApplication.applicationId}`,
+                : `Application submitted successfully`,
             });
             if (isFinal) {
               navigate(`/submission-confirmation/${latestApplication.applicationId}`);
@@ -599,6 +621,7 @@ const ApplicationForm = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userData');
     Swal.fire({
       icon: 'success',
       title: 'Logged Out',
@@ -609,20 +632,21 @@ const ApplicationForm = () => {
     navigate('/login');
   };
 
-  const updateFormData = useCallback((section, data) => {
+  const updateFormData = useCallback((section, dataOrEvent) => {
+    const data = dataOrEvent?.values || dataOrEvent;
+
+    if (!data || typeof data !== 'object') return; // ✅ prevent Object.keys crash
+
     setFormData((prev) => {
       if (section === 'education') {
         const updatedEducationData = {};
         Object.keys(data).forEach((level) => {
           updatedEducationData[level] = {
-            ...prev[section][level] || {},
+            ...(prev[section]?.[level] || {}),
             ...data[level],
           };
         });
-        // Deep compare for education section
-        if (JSON.stringify(updatedEducationData) === JSON.stringify(prev[section])) {
-          return prev;
-        }
+
         return {
           ...prev,
           [section]: {
@@ -631,16 +655,18 @@ const ApplicationForm = () => {
           },
         };
       }
-      // Deep comparison for other sections
-      if (JSON.stringify(data) === JSON.stringify(prev[section])) {
-        return prev;
-      }
+
       return {
         ...prev,
-        [section]: { ...prev[section], ...data },
+        [section]: {
+          ...prev[section],
+          ...data,
+        },
       };
     });
   }, []);
+
+
 
   const formTypeNames = {
     METIPP: 'Pharmacy Diploma',
@@ -693,14 +719,20 @@ const ApplicationForm = () => {
           />
           <EntranceExam
             formType={formType}
-            onUpdate={(data) => updateFormData('entrance', data)}
+            onUpdate={(data) => {
+              updateFormData('entrance', data.values);
+              entranceErrorsRef.current = data.errors; // ✅ capture internal errors
+            }}
             errors={errors}
             initialData={entranceData}
             disabled={isFinalSubmitted}
           />
           <EducationQualification
             formType={formType}
-            onUpdate={(data) => updateFormData('education', data)}
+            onUpdate={(data) => {
+              updateFormData('education', data.values);
+              educationErrorsRef.current = data.errors; // ✅ capture internal errors
+            }}
             errors={errors}
             initialData={educationData}
             disabled={isFinalSubmitted}

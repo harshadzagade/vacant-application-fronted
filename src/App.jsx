@@ -43,6 +43,10 @@ function App() {
   };
 
   useEffect(() => {
+    const path = window.location.pathname;
+    // Skip fetching user info on admin routes
+    if (path.startsWith('/admin')) return;
+
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
