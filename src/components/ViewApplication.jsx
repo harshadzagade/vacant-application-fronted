@@ -111,8 +111,10 @@ const ViewApplication = () => {
   const fullName = `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim();
   const email = userData.email || 'N/A';
   const phoneNo = userData.phoneNo || 'N/A';
-  const programName = formTypeNames[applicationData.formType] || 'Unknown Program';
+  // const programName = formTypeNames[applicationData.formType] || 'Unknown Program';
   const { personal, documents } = applicationData;
+  const submissionDate = new Date(applicationData.submissionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col print:min-h-0 print:bg-white">
@@ -207,113 +209,117 @@ const ViewApplication = () => {
             </section>
 
             {/* Entrance Exam Details */}
-            <section id="entrance" className="mb-10 print:mb-4">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-lg print:mb-2">
-                <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Entrance Exam Details
-              </h2>
-              <div className="space-y-6 print:space-y-2">
-                {(() => {
-                  const entrance = applicationData.entrance || {};
-                  const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
+            {applicationData.formType !== 'METIPP' && (
+              <section id="entrance" className="mb-10 print:mb-4">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-5 flex items-center gap-2 print:text-lg print:mb-2">
+                  <svg className="w-6 h-6 text-blue-600 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Entrance Exam Details
+                </h2>
+                <div className="space-y-6 print:space-y-2">
+                  {(() => {
+                    const entrance = applicationData.entrance || {};
+                    const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
 
-                  return (
-                    <>
-                      {/* Print View - Table Format */}
-                      <table className="hidden print:table w-full border-collapse border border-gray-300">
-                        <thead>
-                          <tr className="bg-gray-200">
-                            <th className="border border-gray-300 p-2"></th>
-                            {exams.map((exam) => (
-                              <th key={exam} className="border border-gray-300 p-2">
-                                {exam.toUpperCase()}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td className="border border-gray-300 p-2">Score</td>
-                            {exams.map((exam) => (
-                              <td key={exam} className="border border-gray-300 p-2">
-                                {entrance[`${exam}Score`] || ''}
-                              </td>
-                            ))}
-                          </tr>
-                          <tr>
-                            <td className="border border-gray-300 p-2">Percentile</td>
-                            {exams.map((exam) => (
-                              <td key={exam} className="border border-gray-300 p-2">
-                                {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || ''}
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
+                    return (
+                      <>
+                        {/* Print View - Table Format */}
+                        {applicationData.formType !== 'METIPP' && (
+                          <table className="hidden print:table w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="bg-gray-200">
+                                <th className="border border-gray-300 p-2"></th>
+                                {exams.map((exam) => (
+                                  <th key={exam} className="border border-gray-300 p-2">
+                                    {exam.toUpperCase()}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td className="border border-gray-300 p-2">Score</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-300 p-2">
+                                    {entrance[`${exam}Score`] || ''}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2">Percentile</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-300 p-2">
+                                    {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || ''}
+                                  </td>
+                                ))}
+                              </tr>
+                            </tbody>
+                          </table>
+                        )}
 
-                      {/* On-Screen View - Table Format */}
-                      <div className="print:hidden">
-                        <table className="w-full border-collapse border border-gray-200">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="border border-gray-200 p-4 text-left text-gray-800"></th>
-                              {exams.map((exam) => (
-                                <th key={exam} className="border border-gray-200 p-4 text-left text-gray-800">
-                                  {exam.toUpperCase()}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="hover:bg-gray-50">
-                              <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
-                              {exams.map((exam) => (
-                                <td key={exam} className="border border-gray-200 p-4">
-                                  {entrance[`${exam}Score`] || 'N/A'}
-                                </td>
-                              ))}
-                            </tr>
-                            <tr className="hover:bg-gray-50">
-                              <td className="border border-gray-200 p-4 font-semibold text-gray-700">Percentile</td>
-                              {exams.map((exam) => (
-                                <td key={exam} className="border border-gray-200 p-4">
-                                  {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || 'N/A'}
-                                </td>
-                              ))}
-                            </tr>
-                            {(applicationData.formType === 'METIPD' || applicationData.formType === 'METIPP') && (
-                              <>
-                                <tr className="hover:bg-gray-50">
-                                  <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCB Marks</td>
-                                  <td className="border border-gray-200 p-4">{entrance.cetPcbMarks || 'N/A'}</td>
-                                  {exams.slice(1).map((exam) => (
-                                    <td key={exam} className="border border-gray-200 p-4">-</td>
-                                  ))}
-                                </tr>
-                                <tr className="hover:bg-gray-50">
-                                  <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCM Marks</td>
-                                  <td className="border border-gray-200 p-4">{entrance.cetPcmMarks || 'N/A'}</td>
-                                  {exams.slice(1).map((exam) => (
-                                    <td key={exam} className="border border-gray-200 p-4">-</td>
-                                  ))}
-                                </tr>
-                              </>
+                        {/* On-Screen View - Table Format */}
+                        <div className="print:hidden">
+                          <table className="w-full border-collapse border border-gray-200">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="border border-gray-200 p-4 text-left text-gray-800"></th>
+                                {exams.map((exam) => (
+                                  <th key={exam} className="border border-gray-200 p-4 text-left text-gray-800">
+                                    {exam.toUpperCase()}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr className="hover:bg-gray-50">
+                                <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-200 p-4">
+                                    {entrance[`${exam}Score`] || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="hover:bg-gray-50">
+                                <td className="border border-gray-200 p-4 font-semibold text-gray-700">Percentile</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-200 p-4">
+                                    {entrance[`${exam}ScorePercent`] || (exam === 'cet' && entrance.percentile) || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+                              {(applicationData.formType === 'METIPD') && (
+                                <>
+                                  <tr className="hover:bg-gray-50">
+                                    <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCB Marks</td>
+                                    <td className="border border-gray-200 p-4">{entrance.cetPcbMarks || 'N/A'}</td>
+                                    {exams.slice(1).map((exam) => (
+                                      <td key={exam} className="border border-gray-200 p-4">-</td>
+                                    ))}
+                                  </tr>
+                                  <tr className="hover:bg-gray-50">
+                                    <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCM Marks</td>
+                                    <td className="border border-gray-200 p-4">{entrance.cetPcmMarks || 'N/A'}</td>
+                                    {exams.slice(1).map((exam) => (
+                                      <td key={exam} className="border border-gray-200 p-4">-</td>
+                                    ))}
+                                  </tr>
+                                </>
+                              )}
+                            </tbody>
+                          </table>
+                          {exams.every(
+                            (exam) => !entrance[`${exam}Score`] && !entrance[`${exam}ScorePercent`] && !entrance.percentile
+                          ) && !(applicationData.formType === 'METIPD' || applicationData.formType === 'METIPP') && (
+                              <div className="text-gray-600 p-4">No entrance exam details available</div>
                             )}
-                          </tbody>
-                        </table>
-                        {exams.every(
-                          (exam) => !entrance[`${exam}Score`] && !entrance[`${exam}ScorePercent`] && !entrance.percentile
-                        ) && !(applicationData.formType === 'METIPD' || applicationData.formType === 'METIPP') && (
-                            <div className="text-gray-600 p-4">No entrance exam details available</div>
-                          )}
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </section>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </section>
+            )}
 
             {/* Education Details */}
             <section id="education" className="mb-10 print:mb-4">
@@ -459,7 +465,7 @@ const ViewApplication = () => {
               </h2>
               <div className="border border-gray-200 p-6 rounded-xl bg-gradient-to-b from-white to-gray-50 shadow-sm hover:shadow-md transition-shadow print:border-gray-300 print:p-2 print:rounded-none print:bg-white">
                 {Object.keys(documents).length > 0 ? (
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 print:gap-2">
+                  <ul className="grid grid-cols-2 gap-4 print:gap-2">
                     {Object.keys(documents).map((doc) => (
                       documents[doc] && (
                         <li key={doc} className="text-gray-800 flex items-center">
@@ -483,10 +489,26 @@ const ViewApplication = () => {
                 I, {fullName}, declare that the information given above is true to the best of my knowledge & belief.
               </p>
               <p className="text-gray-800">
-                <strong>Date:</strong> {personal.submissionDate ? new Date(personal.submissionDate).toLocaleDateString('en-US') : 'N/A'}
+                <strong>Date:</strong> {submissionDate || 'N/A'}
               </p>
               <p className="text-sm text-gray-600 mt-6 print:mt-2">
                 Note: The applicant should have passed a minimum three-year duration Bachelor's Degree awarded by any of the Universities recognized by the University Grants Commission or Association of Indian Universities in any discipline with at least 50% marks in aggregate or equivalent.
+              </p>
+            </section>
+
+            {/* right side -   Signature */}
+            <section id="signature" className="mb-10 print:mb-4 flex flex-col items-end">
+              <p className="text-gray-800">
+                <strong> {fullName} </strong> {applicationData.documents.signaturePhoto ? (
+                  <img
+                    src={`https://vacantseats.met.edu/${applicationData.documents.signaturePhoto}`}
+                    alt="Signature"
+                    className="w-32 h-20 object-contain mt-2"
+                    style={{ maxWidth: '100%' }}
+                  />
+                ) : (
+                  'N/A'
+                )}
               </p>
             </section>
           </div>
@@ -575,7 +597,8 @@ const ViewApplication = () => {
               display: none !important;
             }
             @page {
-              margin: 15mm;
+              size: auto;
+              margin: 0.2in;
             }
           }
         `}

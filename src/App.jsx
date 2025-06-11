@@ -19,10 +19,11 @@ const ProtectedRoute = ({ children }) => {
 const PrintHeader = ({ userData, programName }) => {
   const location = useLocation();
   const isViewApplicationRoute = location.pathname.startsWith('/view-application');
+  
 
   return isViewApplicationRoute ? (
     <div className="hidden print:block border-b border-gray-300 pb-2">
-      <h1 className="text-2xl font-bold text-center mb-6">{userData?.institutes?.[0]?.name || 'MET Institute of Management'}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{userData?.institutes?.[0]?.instituteName}</h1>
       <h2 className="text-xl font-semibold text-center mb-4">
         Application Form for {programName || 'Program'} Admission Against Vacant/Cancellation Seat
       </h2>
