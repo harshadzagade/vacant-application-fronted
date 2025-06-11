@@ -37,7 +37,6 @@ const AdminDashboard = () => {
         else throw new Error(profRes.data.message || 'Failed to load profile');
 
         const appsRes = await axios.get('https://vacantseats.met.edu/api/admin/applications', { headers });
-        console.log('appsRes', appsRes.data.applications);
 
         if (appsRes.data.success) setApplications(appsRes.data.applications);
         else throw new Error(appsRes.data.message || 'Failed to load applications');
@@ -73,7 +72,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `https://vacantseats.met.edu/api/admin/application/${applicationId}/status`,
+        `https://vacantseats.met.edu/api/admin/applications/status/${applicationId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

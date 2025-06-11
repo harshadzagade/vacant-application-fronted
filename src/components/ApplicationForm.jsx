@@ -615,7 +615,15 @@ const ApplicationForm = () => {
       cancelButtonText: 'Cancel',
     });
     if (result.isConfirmed) {
-      handleSubmit(e, true);
+      if (!termsAgreed) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Please agree to the terms',
+          text: 'You must agree to the terms before submitting the application.',
+        });
+      } else {
+        handleSubmit(e, true); // Fix: Call handleSubmit instead of handleFinalSubmit
+      }
     }
   };
 
@@ -764,7 +772,7 @@ const ApplicationForm = () => {
                 {applicationId && (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
                       if (!termsAgreed) {
                         Swal.fire({
                           icon: 'error',
@@ -772,7 +780,7 @@ const ApplicationForm = () => {
                           text: 'You must agree to the terms before submitting the application.',
                         });
                       } else {
-                        handleFinalSubmit();
+                        handleFinalSubmit(e); // ✅ Pass the event
                       }
                     }}
                     className="p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
