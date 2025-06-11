@@ -721,6 +721,9 @@ const AdminDashboard = () => {
                       size: auto;
                       margin: 0.2in;
                     }
+                    .break-after-page {
+                      page-break-after: always;
+                    }
                   }
                 `}
               </style>
