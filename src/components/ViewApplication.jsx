@@ -88,12 +88,12 @@ const ViewApplication = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const formTypeNames = {
-    METIPP: 'Pharmacy Diploma',
-    METIPD: 'Pharmacy Degree',
-    METIOM: 'IOM',
-    METICS: 'MCA',
-  };
+  // const formTypeNames = {
+  //   METIPP: 'Pharmacy Diploma',
+  //   METIPD: 'Pharmacy Degree',
+  //   METIOM: 'IOM',
+  //   METICS: 'MCA',
+  // };
 
   if (isLoading) {
     return (
@@ -559,9 +559,7 @@ const ViewApplication = () => {
             .print\\:bg-white {
               background: white !important;
             }
-            .print\\:break-inside-avoid {
-              break-inside: avoid !important;
-            }
+
             .print\\:hidden {
               display: none !important;
             }

@@ -481,6 +481,22 @@ const ApplicationForm = () => {
       }
     }
 
+    if (educationErrorsRef.current && typeof educationErrorsRef.current === 'object') {
+      Object.keys(educationErrorsRef.current).forEach((key) => {
+        if (educationErrorsRef.current[key]) {
+          errorMessages.push(key.replace('.', ' ').replace(/([A-Z])/g, ' $1'));
+        }
+      });
+    }
+
+    if (entranceErrorsRef.current && typeof entranceErrorsRef.current === 'object') {
+      Object.keys(entranceErrorsRef.current).forEach((key) => {
+        if (entranceErrorsRef.current[key]) {
+          errorMessages.push(key.replace('.', ' ').replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (l) => l.toUpperCase()));
+        }
+      });
+    }
+
     const internalEduErrors = educationErrorsRef.current || {};
     const internalEntErrors = entranceErrorsRef.current || {};
     const mergedErrors = { ...newErrors, ...internalEduErrors, ...internalEntErrors };
@@ -616,6 +632,7 @@ const ApplicationForm = () => {
     });
     if (result.isConfirmed) {
       if (!termsAgreed) {
+        setErrors((prev) => ({ ...prev, terms: 'Please agree to the terms' }));
         Swal.fire({
           icon: 'error',
           title: 'Please agree to the terms',
@@ -775,7 +792,7 @@ const ApplicationForm = () => {
                     onClick={(e) => {
                       if (!termsAgreed) {
                         Swal.fire({
-                          icon: 'error',
+                          icon: 'warning',
                           title: 'Please agree to the terms',
                           text: 'You must agree to the terms before submitting the application.',
                         });

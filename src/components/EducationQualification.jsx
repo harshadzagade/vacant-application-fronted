@@ -41,9 +41,11 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
         marks: initialData.graduation?.marks || '',
         percent: initialData.graduation?.percent || '',
         year: initialData.graduation?.year || '',
-        graduationStatus: initialData.graduation?.graduationStatus || (initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing'),
+        graduationStatus: initialData.graduation?.graduationStatus || '',
       },
     };
+
+    
 
     const newGraduationStatus = initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing';
 
