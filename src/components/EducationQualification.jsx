@@ -6,7 +6,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
   const [formValues, setFormValues] = useState({
     ssc: { board: '', school: '', stream: '', marks: '', percent: '', year: '' },
     hsc: { board: '', school: '', stream: '', marks: '', percent: '', year: '', pcmMarks: '', pcbMarks: '', englishMarks: '' },
-    graduation: { board: '', school: '', stream: '', marks: '', percent: '', year: '' },
+    graduation: { board: '', school: '', stream: '', marks: '', percent: '', year: '', status: '', graduationStatus: '' },
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const lastSyncedValues = useRef(null);
@@ -35,13 +35,13 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
         englishMarks: initialData.hsc?.englishMarks || '',
       },
       graduation: {
-        graduationStatus: initialData.graduation?.graduationStatus || '',
         board: initialData.graduation?.board || '',
         school: initialData.graduation?.school || '',
         stream: initialData.graduation?.stream || '',
         marks: initialData.graduation?.marks || '',
         percent: initialData.graduation?.percent || '',
         year: initialData.graduation?.year || '',
+        graduationStatus: initialData.graduation?.graduationStatus || (initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing'),
       },
     };
 
