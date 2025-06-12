@@ -45,7 +45,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
       },
     };
 
-    
+
 
     const newGraduationStatus = initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing';
 
@@ -229,23 +229,60 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
 
           {renderFields(level)}
 
-          {level === 'hsc' && formType === 'METIPP' && (
-            <div className="mt-4">
-              <label className="block text-brand-700 text-sm font-medium mb-2">English Marks *</label>
-              <input
-                type="number"
-                name={`${level}.englishMarks`}
-                value={formValues[level].englishMarks}
-                onChange={handleChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${(fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]) ? 'border-red-500' : 'border-brand-200'
-                  }`}
-                disabled={disabled}
-                required
-              />
-              {(fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]) && (
-                <p className="text-red-500 text-xs mt-1">
-                  {fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]}
-                </p>
+          {level === 'hsc' && ['METIPP', 'METIPD'].includes(formType) && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-brand-700 text-sm font-medium mb-2">PCM Marks *</label>
+                <input
+                  type="number"
+                  name={`${level}.pcmMarks`}
+                  value={formValues[level].pcmMarks}
+                  onChange={handleChange}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${(fieldErrors[`${level}.pcmMarks`] || (errors[level] && errors[level].pcmMarks) || errors[`${level}.pcmMarks`]) ? 'border-red-500' : 'border-brand-200'}`}
+                  disabled={disabled}
+                  required
+                />
+                {(fieldErrors[`${level}.pcmMarks`] || (errors[level] && errors[level].pcmMarks) || errors[`${level}.pcmMarks`]) && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors[`${level}.pcmMarks`] || (errors[level] && errors[level].pcmMarks) || errors[`${level}.pcmMarks`]}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-brand-700 text-sm font-medium mb-2">PCB Marks *</label>
+                <input
+                  type="number"
+                  name={`${level}.pcbMarks`}
+                  value={formValues[level].pcbMarks}
+                  onChange={handleChange}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${(fieldErrors[`${level}.pcbMarks`] || (errors[level] && errors[level].pcbMarks) || errors[`${level}.pcbMarks`]) ? 'border-red-500' : 'border-brand-200'}`}
+                  disabled={disabled}
+                  required
+                />
+                {(fieldErrors[`${level}.pcbMarks`] || (errors[level] && errors[level].pcbMarks) || errors[`${level}.pcbMarks`]) && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors[`${level}.pcbMarks`] || (errors[level] && errors[level].pcbMarks) || errors[`${level}.pcbMarks`]}
+                  </p>
+                )}
+              </div>
+              {formType === 'METIPP' && (
+                <div>
+                  <label className="block text-brand-700 text-sm font-medium mb-2">English Marks *</label>
+                  <input
+                    type="number"
+                    name={`${level}.englishMarks`}
+                    value={formValues[level].englishMarks}
+                    onChange={handleChange}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition ${(fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]) ? 'border-red-500' : 'border-brand-200'}`}
+                    disabled={disabled}
+                    required
+                  />
+                  {(fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]) && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors[`${level}.englishMarks`] || (errors[level] && errors[level].englishMarks) || errors[`${level}.englishMarks`]}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}

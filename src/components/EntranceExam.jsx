@@ -15,8 +15,6 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       cetApplicationId: initialData.cetApplicationId || '',
       cetScore: initialData.cetScore || '',
       cetScorePercent: initialData.cetScorePercent || '',
-      cetPcbMarks: initialData.cetPcbMarks || '',
-      cetPcmMarks: initialData.cetPcmMarks || '',
       catApplicationId: initialData.catApplicationId || '',
       catScore: initialData.catScore || '',
       catScorePercent: initialData.catScorePercent || '',
@@ -71,10 +69,11 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
     if (name.includes('ScorePercent')) {
       const val = parseFloat(value);
       if (isNaN(val) || val < 0 || val > 100) error = 'Percentile must be 0-100';
-    } else if (name.includes('Score')) {
-      const val = parseFloat(value);
-      if (isNaN(val) || val < 0 || val > 200) error = 'Score must be 0-200';
-    }
+    } 
+    // else if (name.includes('Score')) {
+    //   const val = parseFloat(value);
+    //   if (isNaN(val) || val < 0 || val > 200) error = 'Score must be 0-200';
+    // }
 
     const updatedValues = { ...formValues, [name]: value };
     const updatedErrors = { ...internalErrors, [name]: error };
@@ -155,36 +154,6 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 disabled={disabled}
               />
               {errors.cetScorePercent && <p className="text-red-600 text-xs mt-1">{errors.cetScorePercent}</p>}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">CET-PCB Marks *</label>
-              <input
-                type="number"
-                name="cetPcbMarks"
-                value={formValues.cetPcbMarks}
-                onChange={handleChange}
-                min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetPcbMarks ? 'border-red-500' : 'border-gray-600'
-                  }`}
-                placeholder="Enter CET-PCB Marks"
-                disabled={disabled}
-              />
-              {errors.cetPcbMarks && <p className="text-red-600 text-xs mt-1">{errors.cetPcbMarks}</p>}
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">CET-PCM Marks *</label>
-              <input
-                type="number"
-                name="cetPcmMarks"
-                value={formValues.cetPcmMarks}
-                onChange={handleChange}
-                min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetPcmMarks ? 'border-red-500' : 'border-gray-600'
-                  }`}
-                placeholder="Enter CET-PCM Marks"
-                disabled={disabled}
-              />
-              {errors.cetPcmMarks && <p className="text-red-600 text-xs mt-1">{errors.cetPcmMarks}</p>}
             </div>
           </div>
         );

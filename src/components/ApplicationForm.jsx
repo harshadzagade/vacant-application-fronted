@@ -319,12 +319,12 @@ const ApplicationForm = () => {
         newErrors.cetApplicationId = 'CET Application ID is required';
         errorMessages.push('CET Application ID');
       }
-      if (!formData.entrance.cetScore) {
-        newErrors.cetScore = 'CET Score is required';
-        errorMessages.push('CET Score');
-      } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
-        newErrors.cetScore = 'CET Score cannot be negative';
-        errorMessages.push('CET Score (cannot be negative)');
+      // if (!formData.entrance.cetScore) {
+      //   newErrors.cetScore = 'CET Score is required';
+      //   errorMessages.push('CET Score');
+      // } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
+      //   newErrors.cetScore = 'CET Score cannot be negative';
+      //   errorMessages.push('CET Score (cannot be negative)');
       }
       if (!formData.entrance.cetScorePercent) {
         newErrors.cetScorePercent = 'CET Percentile is required';
@@ -332,20 +332,6 @@ const ApplicationForm = () => {
       } else if (formData.entrance.cetScorePercent < 0 || formData.entrance.cetScorePercent > 100) {
         newErrors.cetScorePercent = 'CET Percentile must be between 0 and 100';
         errorMessages.push('CET Percentile (must be between 0 and 100)');
-      }
-      if (!formData.entrance.cetPcbMarks) {
-        newErrors.cetPcbMarks = 'CET-PCB Marks are required';
-        errorMessages.push('CET-PCB Marks');
-      } else if (formData.entrance.cetPcbMarks < 0 || formData.entrance.cetPcbMarks > 100) {
-        newErrors.cetPcbMarks = 'CET-PCB Marks cannot be negative';
-        errorMessages.push('CET-PCB Marks (cannot be negative)');
-      }
-      if (!formData.entrance.cetPcmMarks) {
-        newErrors.cetPcmMarks = 'CET-PCM Marks are required';
-        errorMessages.push('CET-PCM Marks');
-      } else if (formData.entrance.cetPcmMarks < 0 || formData.entrance.cetPcmMarks > 100) {
-        newErrors.cetPcmMarks = 'CET-PCM Marks cannot be negative';
-        errorMessages.push('CET-PCM Marks (cannot be negative)');
       }
     }
 
@@ -415,13 +401,13 @@ const ApplicationForm = () => {
             newErrors[`${exam}ApplicationId`] = `${exam.toUpperCase()} Application ID is required`;
             errorMessages.push(`${exam.toUpperCase()} Application ID`);
           }
-          if (!formData.entrance[`${exam}Score`]) {
-            newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score is required`;
-            errorMessages.push(`${exam.toUpperCase()} Score`);
-          } else if (formData.entrance[`${exam}Score`] < 0 || formData.entrance[`${exam}Score`] > 200) {
-            newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score cannot be negative`;
-            errorMessages.push(`${exam.toUpperCase()} Score (cannot be negative)`);
-          }
+          // if (!formData.entrance[`${exam}Score`]) {
+          //   newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score is required`;
+          //   errorMessages.push(`${exam.toUpperCase()} Score`);
+          // } else if (formData.entrance[`${exam}Score`] < 0 || formData.entrance[`${exam}Score`] > 200) {
+          //   newErrors[`${exam}Score`] = `${exam.toUpperCase()} Score cannot be negative`;
+          //   errorMessages.push(`${exam.toUpperCase()} Score (cannot be negative)`);
+          // }
           if (!formData.entrance[`${exam}ScorePercent`]) {
             newErrors[`${exam}ScorePercent`] = `${exam.toUpperCase()} Percentile is required`;
             errorMessages.push(`${exam.toUpperCase()} Percentile`);
@@ -465,13 +451,13 @@ const ApplicationForm = () => {
         newErrors.cetApplicationId = 'CET Application ID is required';
         errorMessages.push('CET Application ID');
       }
-      if (!formData.entrance.cetScore) {
-        newErrors.cetScore = 'CET Score is required';
-        errorMessages.push('CET Score');
-      } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
-        newErrors.cetScore = 'CET Score cannot be negative';
-        errorMessages.push('CET Score (cannot be negative)');
-      }
+      // if (!formData.entrance.cetScore) {
+      //   newErrors.cetScore = 'CET Score is required';
+      //   errorMessages.push('CET Score');
+      // } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
+      //   newErrors.cetScore = 'CET Score cannot be negative';
+      //   errorMessages.push('CET Score (cannot be negative)');
+      // }
       if (!formData.entrance.percentile) {
         newErrors.percentile = 'Percentile is required';
         errorMessages.push('Percentile');
