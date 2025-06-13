@@ -59,6 +59,10 @@ const AdminDashboard = () => {
         `https://vacantseats.met.edu/api/admin/applications/details/${applicationId}`,
         { headers }
       );
+
+      console.log('Application Details Response:', res.data.application);
+      
+      
       if (res.data.success) setViewDetails(res.data.application);
       else throw new Error(res.data.message || 'Failed to load details');
     } catch (error) {
@@ -175,7 +179,7 @@ const AdminDashboard = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Applications');
     XLSX.writeFile(wb, 'selected_applications.xlsx');
   };
-
+ 
   const handleSelect = id => setSelectedApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const handleLogout = () => {
@@ -186,6 +190,7 @@ const AdminDashboard = () => {
 
   const handlePrint = () => window.print();
 
+  
   if (isLoading) return (
     <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
@@ -600,7 +605,8 @@ const AdminDashboard = () => {
                     I, {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim()}, declare that the information given above is true to the best of my knowledge & belief.
                   </p>
                   <p className="text-gray-800">
-                    <strong>Date:</strong> {viewDetails.personal?.submissionDate ? new Date(viewDetails.personal.submissionDate).toLocaleDateString('en-US') : 'N/A'}
+                    <strong>Date:</strong> {new Date(viewDetails.submissionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {console.log()}
                   </p>
                   <p className="text-sm text-gray-600 mt-6 print:mt-2">
                     Note: The applicant should have passed a minimum three-year duration Bachelor's Degree awarded by any of the Universities recognized by the University Grants Commission or Association of Indian Universities in any discipline with at least 50% marks in aggregate or equivalent.
