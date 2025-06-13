@@ -15,6 +15,8 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       cetApplicationId: initialData.cetApplicationId || '',
       cetScore: initialData.cetScore || '',
       cetScorePercent: initialData.cetScorePercent || '',
+      cetPcbMarks: initialData.cetPcbMarks || '',
+      cetPcmMarks: initialData.cetPcmMarks || '',
       catApplicationId: initialData.catApplicationId || '',
       catScore: initialData.catScore || '',
       catScorePercent: initialData.catScorePercent || '',
@@ -40,7 +42,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
     const newSelectedExams = exams.filter(
       (exam) =>
         initialData[`${exam}ApplicationId`] ||
-        initialData[`${exam}Score`] ||
+        // initialData[`${exam}Score`] ||
         initialData[`${exam}ScorePercent`]
     );
 
@@ -124,7 +126,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               {errors.cetApplicationId && <p className="text-red-600 text-xs mt-1">{errors.cetApplicationId}</p>}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score *</label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score </label>
               <input
                 type="number"
                 name="cetScore"
@@ -198,7 +200,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                   {errors[`${exam}ApplicationId`] && <p className="text-red-600 text-xs mt-1">{errors[`${exam}ApplicationId`]}</p>}
                 </div>
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-2">{exam.toUpperCase()} Score *</label>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">{exam.toUpperCase()} Score</label>
                   <input
                     type="number"
                     name={`${exam}Score`}
@@ -251,7 +253,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               {errors.cetApplicationId && <p className="text-red-600 text-xs mt-1">{errors.cetApplicationId}</p>}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score *</label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score</label>
               <input
                 type="number"
                 name="cetScore"

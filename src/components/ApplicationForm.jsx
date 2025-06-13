@@ -286,10 +286,10 @@ const ApplicationForm = () => {
         newErrors.hscMarksheet = 'HSC marksheet is required';
         errorMessages.push('HSC Marksheet');
       }
-      if (!formData.documents.cetScoreCard && !applicationId) {
-        newErrors.cetScoreCard = 'CET score card is required';
-        errorMessages.push('CET Score Card');
-      }
+      // if (!formData.documents.cetScoreCard && !applicationId) {
+      //   newErrors.cetScoreCard = 'CET score card is required';
+      //   errorMessages.push('CET Score Card');
+      // }
       if (!formData.documents.fcVerificationAck && !applicationId) {
         newErrors.fcVerificationAck = 'FC verification acknowledgment is required';
         errorMessages.push('FC Verification Acknowledgment');
@@ -325,7 +325,7 @@ const ApplicationForm = () => {
       // } else if (formData.entrance.cetScore < 0 || formData.entrance.cetScore > 200) {
       //   newErrors.cetScore = 'CET Score cannot be negative';
       //   errorMessages.push('CET Score (cannot be negative)');
-      }
+      // }
       if (!formData.entrance.cetScorePercent) {
         newErrors.cetScorePercent = 'CET Percentile is required';
         errorMessages.push('CET Percentile');
@@ -336,10 +336,10 @@ const ApplicationForm = () => {
     }
 
     if (formType === 'METIOM') {
-      if (!formData.documents.cetScoreCard && !applicationId) {
-        newErrors.cetScoreCard = 'CET score card is required';
-        errorMessages.push('CET Score Card');
-      }
+      // if (!formData.documents.cetScoreCard && !applicationId) {
+      //   newErrors.cetScoreCard = 'CET score card is required';
+      //   errorMessages.push('CET Score Card');
+      // }
       if (!formData.documents.fcReceipt && !applicationId) {
         newErrors.fcReceipt = 'FC receipt is required';
         errorMessages.push('FC Receipt');
@@ -384,7 +384,7 @@ const ApplicationForm = () => {
       const hasExamData = exams.some(
         (exam) =>
           formData.entrance[`${exam}ApplicationId`] &&
-          formData.entrance[`${exam}Score`] &&
+          // formData.entrance[`${exam}Score`] &&
           formData.entrance[`${exam}ScorePercent`]
       );
       if (!hasExamData) {
@@ -394,7 +394,7 @@ const ApplicationForm = () => {
       exams.forEach((exam) => {
         if (
           formData.entrance[`${exam}ApplicationId`] ||
-          formData.entrance[`${exam}Score`] ||
+          // formData.entrance[`${exam}Score`] ||
           formData.entrance[`${exam}ScorePercent`]
         ) {
           if (!formData.entrance[`${exam}ApplicationId`]) {
@@ -420,10 +420,10 @@ const ApplicationForm = () => {
     }
 
     if (formType === 'METICS') {
-      if (!formData.documents.cetScoreCard && !applicationId) {
-        newErrors.cetScoreCard = 'CET score card is required';
-        errorMessages.push('CET Score Card');
-      }
+      // if (!formData.documents.cetScoreCard && !applicationId) {
+      //   newErrors.cetScoreCard = 'CET score card is required';
+      //   errorMessages.push('CET Score Card');
+      // }
       ['ssc', 'hsc', 'graduation'].forEach((level) => {
         if (!formData.education[level]) {
           newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
@@ -602,7 +602,7 @@ const ApplicationForm = () => {
       }
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'Error', text: `Error: ${error.message}` });
-      console.error('Submission error:', error);
+      console.error('Submission error:', error || error.message);
     }
   };
 
