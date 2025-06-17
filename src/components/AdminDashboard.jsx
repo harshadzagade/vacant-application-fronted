@@ -159,7 +159,7 @@ const AdminDashboard = () => {
           Status: app.status,
           Email: app.user?.email || 'N/A',
           Phone: app.user?.phoneNo || 'N/A',
-          DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-US') : 'N/A',
+          DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A',
           Gender: app.personal?.gender || 'N/A',
           FatherName: app.personal?.fatherName || 'N/A',
           FatherMobileNo: app.personal?.fatherMobileNo || 'N/A',
@@ -261,7 +261,7 @@ const AdminDashboard = () => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:bg-white print:inset-auto print:flex-col">
               {/* Print-only header */}
               <div className="hidden print:block border-b border-gray-300 pb-4 w-full text-center">
-                <div className="flex flex-col items-center justify-center mb-2">
+                <div className="flex flex-col items-center justify-center mb-2 print:text-[#E31E24]">
                   <h1 className="text-2xl font-bold">{profile?.institute?.instituteName || 'MET Institute'}</h1>
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Application Form for {profile?.institute?.instituteName || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
@@ -293,7 +293,7 @@ const AdminDashboard = () => {
                         <span className="font-semibold text-gray-700">Name:</span> {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim() || 'N/A'}
                       </div>
                       <div>
-                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-US') : 'N/A'}
+                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-US', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'N/A'}
                       </div>
                       <div>
                         <span className="font-semibold text-gray-700">Gender:</span> {viewDetails.personal?.gender || 'N/A'}
