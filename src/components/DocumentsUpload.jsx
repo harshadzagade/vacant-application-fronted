@@ -136,8 +136,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       { key: 'cetScoreCard', label: 'CET Score Card *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM'].includes(formType) },
       { key: 'fcReceipt', label: 'FC Receipt *', accept: 'application/pdf,image/jpeg,image/png', required: formType === 'METIOM' },
       { key: 'hscMarksheet', label: 'HSC Marksheet *', accept: 'application/pdf,image/jpeg,image/png', required: ['METIPP', 'METIPD'].includes(formType) },
-      { key: 'fcVerification', label: 'FC Verification Copy *', accept: 'application/pdf,image/jpeg,image/png', required: formType === 'METIPP' },
-      { key: 'fcVerificationAck', label: 'FC Verification Acknowledgment *', accept: 'application/pdf,image/jpeg,image/png', required: formType === 'METIPD' },
+      { key: 'fcVerification', label: 'FC Verification Copy *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPP', 'METIPD'].includes(formType) },
     ];
 
     return (

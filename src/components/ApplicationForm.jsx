@@ -420,11 +420,15 @@ const ApplicationForm = () => {
     }
 
     if (formType === 'METICS') {
-      // if (!formData.documents.cetScoreCard && !applicationId) {
-      //   newErrors.cetScoreCard = 'CET score card is required';
-      //   errorMessages.push('CET Score Card');
-      // }
-      ['ssc', 'hsc', 'graduation'].forEach((level) => {
+      if (!formData.documents.cetScoreCard && !applicationId) {
+        newErrors.cetScoreCard = 'CET score card is required';
+        errorMessages.push('CET Score Card');
+      }
+      if (!formData.documents.fcReceipt && !applicationId) {
+        newErrors.fcReceipt = 'FC receipt is required';
+        errorMessages.push('FC Receipt');
+      }
+      ['graduation'].forEach((level) => {
         if (!formData.education[level]) {
           newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
           newErrors[`${level}.school`] = `${level.toUpperCase()} School Name is required`;
@@ -632,7 +636,7 @@ const ApplicationForm = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('user');
     Swal.fire({
       icon: 'success',
       title: 'Logged Out',

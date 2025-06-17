@@ -183,7 +183,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
   const sectionMap = {
     METIPP: ['hsc'],
     METIPD: ['hsc'],
-    METICS: ['ssc', 'hsc', 'graduation'],
+    METICS: ['graduation'],
     METIOM: ['hsc', 'graduation'],
   };
 

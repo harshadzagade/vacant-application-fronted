@@ -11,6 +11,7 @@ const SubmissionConfirmation = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     Swal.fire({
       icon: 'success',
       title: 'Logged Out',

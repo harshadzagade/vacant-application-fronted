@@ -81,6 +81,7 @@ const ViewApplication = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     Swal.fire({
       icon: 'success',
       title: 'Logged Out',
@@ -188,7 +189,7 @@ const ViewApplication = () => {
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">DOB:</span>{' '}
-                    {personal.dob ? new Date(personal.dob).toLocaleDateString('en-US') : 'N/A'}
+                    {personal.dob ? new Date(personal.dob).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Gender:</span> {personal.gender || 'N/A'}
@@ -268,6 +269,14 @@ const ViewApplication = () => {
                             </tr>
                           </thead>
                           <tbody>
+                             <tr>
+                              <td className="border border-gray-300 p-1 text-sm"> Application ID</td>
+                              {exams.map((exam) => (
+                                <td key={exam} className="border border-gray-300 p-1 text-sm">
+                                  {entrance[`${exam}ApplicationId`] || ''}
+                                </td>
+                              ))}
+                            </tr>
                             <tr>
                               <td className="border border-gray-300 p-1 text-sm">Score</td>
                               {exams.map((exam) => (
@@ -292,7 +301,7 @@ const ViewApplication = () => {
                           <table className="w-full border-collapse border border-gray-200">
                             <thead>
                               <tr className="bg-gray-100">
-                                <th className="border border-gray-200 p-4 text-left text-gray-800"></th>
+                                <th className="border border-gray-200 p-4 text-left text-gray-800"> Application ID </th>
                                 {exams.map((exam) => (
                                   <th key={exam} className="border border-gray-200 p-4 text-left text-gray-800">
                                     {exam.toUpperCase()}
@@ -301,6 +310,15 @@ const ViewApplication = () => {
                               </tr>
                             </thead>
                             <tbody>
+                              {/* exam application ID */}
+                              <tr className="hover:bg-gray-50">
+                                <td className="border border-gray-200 p-4 font-semibold text-gray-700"> Application ID</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-200 p-4">
+                                    {entrance[`${exam}ApplicationId`] || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
                               <tr className="hover:bg-gray-50">
                                 <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
                                 {exams.map((exam) => (

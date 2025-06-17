@@ -36,7 +36,12 @@ const AdminDashboard = () => {
         if (profRes.data.success) setProfile(profRes.data.staff);
         else throw new Error(profRes.data.message || 'Failed to load profile');
 
+        // console.log('Profile Response:', profRes.data.staff);
+
+
         const appsRes = await axios.get('https://vacantseats.met.edu/api/admin/applications', { headers });
+
+        // console.log('Applications Response:', appsRes.data.applications);
 
         if (appsRes.data.success) setApplications(appsRes.data.applications);
         else throw new Error(appsRes.data.message || 'Failed to load applications');
@@ -60,9 +65,9 @@ const AdminDashboard = () => {
         { headers }
       );
 
-      console.log('Application Details Response:', res.data.application);
-      
-      
+      // console.log('Application Details Response:', res.data.application);
+
+
       if (res.data.success) setViewDetails(res.data.application);
       else throw new Error(res.data.message || 'Failed to load details');
     } catch (error) {
@@ -102,9 +107,9 @@ const AdminDashboard = () => {
         const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
 
         // Prepare entrance exam details
-        const entranceDetails = entrance.cetScore
-          ? `CET: ${entrance.cetScore}, Percentile: ${entrance.cetScorePercent || entrance.percentile || 'N/A'}`
-          : 'N/A';
+        // const entranceDetails = entrance.cetScore
+        //   ? `CET: ${entrance.cetScore}, Percentile: ${entrance.cetScorePercent || entrance.percentile || 'N/A'}`
+        //   : 'N/A';
 
         // Prepare structured entrance exam data
         const entranceExams = exams.map(exam => ({
@@ -148,13 +153,12 @@ const AdminDashboard = () => {
         }
 
         return {
-          ApplicationId: app.applicationId,
           ApplicationNo: app.applicationNo,
-          ApplicantName: `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim(),
+          ApplicantName: app.user ? `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim() : 'N/A',
           Program: formTypeNames[app.formType] || 'Unknown',
           Status: app.status,
-          Email: app.user.email || 'N/A',
-          Phone: app.user.phoneNo || 'N/A',
+          Email: app.user?.email || 'N/A',
+          Phone: app.user?.phoneNo || 'N/A',
           DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-US') : 'N/A',
           Gender: app.personal?.gender || 'N/A',
           FatherName: app.personal?.fatherName || 'N/A',
@@ -167,7 +171,7 @@ const AdminDashboard = () => {
           ApplicationDate: app.applicationDate ? new Date(app.applicationDate).toLocaleDateString('en-US') : 'N/A',
           SubmissionDate: app.submissionDate ? new Date(app.submissionDate).toLocaleDateString('en-US') : 'N/A',
           InstituteName: app.institute?.name || 'N/A',
-          EntranceDetails: entranceDetails,
+          // EntranceDetails: entranceDetails,
           ...entranceFields,
           ...educationFields,
           ...documentFields,
@@ -179,18 +183,19 @@ const AdminDashboard = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Applications');
     XLSX.writeFile(wb, 'selected_applications.xlsx');
   };
- 
+
   const handleSelect = id => setSelectedApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     Swal.fire({ icon: 'success', title: 'Logged Out', timer: 1500, showConfirmButton: false });
     navigate('/admin/login');
   };
 
   const handlePrint = () => window.print();
 
-  
+
   if (isLoading) return (
     <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
@@ -234,10 +239,13 @@ const AdminDashboard = () => {
                 <thead><tr className="bg-gray-400"><th className="border p-3 py-2"><input type="checkbox" onChange={e => e.target.checked ? setSelectedApps(applications.map(a => a.applicationId)) : setSelectedApps([])} /></th><th className="border p-3 py-2 text-left">Application No.</th><th className="border p-3 py-2 text-left">Applicant Name</th><th className="border p-3 py-2 text-left">Program</th><th className="border p-3 py-2 text-left">Status</th><th className="border p-3 py-2 text-left">Actions</th></tr></thead>
                 <tbody>
                   {applications.map(app => (
+
                     <tr key={app.applicationId} className="hover:bg-gray-50">
                       <td className="border p-3 py-2"><input type="checkbox" checked={selectedApps.includes(app.applicationId)} onChange={() => handleSelect(app.applicationId)} /></td>
                       <td className="border p-3 py-2">{app.applicationNo}</td>
-                      <td className="border p-3 py-2">{`${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName}`.trim()}</td>
+                      <td className="border p-3 py-2">
+                        {app.user ? `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName || ''}`.trim() : 'N/A'}
+                      </td>
                       <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
                       <td className="border p-3 py-2"><select value={app.status} onChange={e => changeStatus(app.applicationId, e.target.value)} className="border rounded p-1"><option value={app.status}>{app.status}</option><option value="draft">Draft</option></select></td>
                       <td className="border p-3 py-2"><button onClick={() => openDetails(app.applicationId)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">View Details</button></td>
@@ -606,7 +614,6 @@ const AdminDashboard = () => {
                   </p>
                   <p className="text-gray-800">
                     <strong>Date:</strong> {new Date(viewDetails.submissionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    {console.log()}
                   </p>
                   <p className="text-sm text-gray-600 mt-6 print:mt-2">
                     Note: The applicant should have passed a minimum three-year duration Bachelor's Degree awarded by any of the Universities recognized by the University Grants Commission or Association of Indian Universities in any discipline with at least 50% marks in aggregate or equivalent.
