@@ -159,7 +159,7 @@ const AdminDashboard = () => {
           Status: app.status,
           Email: app.user?.email || 'N/A',
           Phone: app.user?.phoneNo || 'N/A',
-          DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A',
+          DOB: app.personal?.dob ? new Date(app.personal.dob).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A',
           Gender: app.personal?.gender || 'N/A',
           FatherName: app.personal?.fatherName || 'N/A',
           FatherMobileNo: app.personal?.fatherMobileNo || 'N/A',
@@ -293,7 +293,7 @@ const AdminDashboard = () => {
                         <span className="font-semibold text-gray-700">Name:</span> {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim() || 'N/A'}
                       </div>
                       <div>
-                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-US', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'N/A'}
+                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'N/A'}
                       </div>
                       <div>
                         <span className="font-semibold text-gray-700">Gender:</span> {viewDetails.personal?.gender || 'N/A'}
