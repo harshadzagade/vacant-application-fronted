@@ -151,7 +151,11 @@ const RegistrationForm = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">User Registration</h2>
+        {/* add logo */}
+        <div className="flex justify-center mb-6">
+          <img src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png" alt="Logo" className="h-[5rem] w-auto" />
+        </div>
+        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">Admissions Application for Institute Level Seats</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <input

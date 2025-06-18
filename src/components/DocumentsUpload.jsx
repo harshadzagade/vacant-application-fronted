@@ -8,7 +8,6 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     fcReceipt: null,
     hscMarksheet: null,
     fcVerification: null,
-    fcVerificationAck: null,
   });
 
   const [filePreviews, setFilePreviews] = useState({
@@ -17,7 +16,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     fcReceipt: null,
     hscMarksheet: null,
     fcVerification: null,
-    fcVerificationAck: null,
+
   });
 
   const [fileErrors, setFileErrors] = useState({});

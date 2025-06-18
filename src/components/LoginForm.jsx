@@ -76,9 +76,12 @@ const LoginForm = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 print:min-h-0 print:p-0">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md print:w-full print:shadow-none print:rounded-none">
+        <div className="flex justify-center mb-2">
+          <img src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png" alt="Logo" className="h-[4rem] w-auto" />
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <h2 className="text-2xl font-semibold text-brand-900 border-b-2 border-brand-200 pb-2 text-center">
-            Login
+            Application Login
           </h2>
           {serverError && (
             <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
