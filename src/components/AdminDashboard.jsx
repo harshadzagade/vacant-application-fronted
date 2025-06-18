@@ -18,7 +18,16 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewDetails, setViewDetails] = useState(null);
+
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedInstitute, setSelectedInstitute] = useState('');
+  const [institutes, setInstitutes] = useState([]);
+
+  const [allApplications, setAllApplications] = useState([]); // full list
+
+
   const navigate = useNavigate();
+
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,16 +44,26 @@ const AdminDashboard = () => {
         const profRes = await axios.get('https://vacantseats.met.edu/api/admin/auth/profile', { headers });
         if (profRes.data.success) setProfile(profRes.data.staff);
         else throw new Error(profRes.data.message || 'Failed to load profile');
-
         // console.log('Profile Response:', profRes.data.staff);
 
 
         const appsRes = await axios.get('https://vacantseats.met.edu/api/admin/applications', { headers });
-
         // console.log('Applications Response:', appsRes.data.applications);
-
         if (appsRes.data.success) setApplications(appsRes.data.applications);
         else throw new Error(appsRes.data.message || 'Failed to load applications');
+
+
+        const instRes = await axios.get('https://vacantseats.met.edu/api/admin/applications/institutes', { headers });
+        if (instRes.data.success) setInstitutes(instRes.data.institutes || []);
+        else throw new Error(instRes.data.message || 'Failed to load institutes');
+
+        if (appsRes.data.success) {
+          setAllApplications(appsRes.data.applications);
+          setApplications(appsRes.data.applications); // default view
+        }
+
+
+
       } catch (error) {
         Swal.fire({ icon: 'error', title: 'Error', text: error.message });
       } finally {
@@ -54,6 +73,25 @@ const AdminDashboard = () => {
 
     loadData();
   }, [navigate]);
+
+
+  const applyFilters = () => {
+    const filtered = allApplications.filter(app => {
+      const yearMatch = selectedYear
+        ? new Date(app.applicationDate).getFullYear().toString() === selectedYear
+        : true;
+
+      const instMatch = selectedInstitute
+        ? app.institute?.id === selectedInstitute
+        : true;
+
+      return yearMatch && instMatch;
+    });
+
+    setApplications(filtered);
+  };
+
+
 
   const openDetails = async (applicationId) => {
     const token = localStorage.getItem('token');
@@ -193,6 +231,42 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
+  const deleteSelectedApplications = async () => {
+    if (!selectedApps.length) {
+      Swal.fire({ icon: 'warning', title: 'No Selection', text: 'Select applications to delete.' });
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm Deletion',
+      text: `Are you sure you want to delete ${selectedApps.length} application(s)?`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.delete('https://vacantseats.met.edu/api/admin/applications/bulk-delete', {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { applicationIds: selectedApps },
+      });
+
+      if (res.data.success) {
+        setApplications(prev => prev.filter(app => !selectedApps.includes(app.applicationId)));
+        setSelectedApps([]);
+        Swal.fire({ icon: 'success', title: 'Deleted', text: 'Applications deleted successfully.' });
+      } else {
+        throw new Error(res.data.message || 'Deletion failed');
+      }
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  };
+
+
   const handlePrint = () => window.print();
 
 
@@ -234,7 +308,42 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center mb-4">
                 {/* <h2 className="text-2xl font-semibold">Applications</h2> */}
                 <button onClick={exportToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export Selected to Excel</button>
+                <button onClick={deleteSelectedApplications} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  Delete Selected
+                </button>
+
               </div>
+              <div className="flex flex-wrap gap-4 mb-4">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    if (e.target.value === '') applyFilters(); // reapply on clear
+                  }}
+                  className="border px-3 py-2 rounded"
+                >
+                  <option value="">All Years</option>
+                  {[2025, 2024, 2023].map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedInstitute}
+                  onChange={(e) => setSelectedInstitute(e.target.value)}
+                  className="border px-3 py-2 rounded"
+                >
+                  <option value="">All Institutes</option>
+                  {institutes.map(inst => (
+                    <option key={inst._id} value={inst._id}>{inst.name}</option>
+                  ))}
+                </select>
+
+                <button onClick={applyFilters} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  Apply Filters
+                </button>
+              </div>
+
               <table className="w-full border-collapse">
                 <thead><tr className="bg-gray-400"><th className="border p-3 py-2"><input type="checkbox" onChange={e => e.target.checked ? setSelectedApps(applications.map(a => a.applicationId)) : setSelectedApps([])} /></th><th className="border p-3 py-2 text-left">Application No.</th><th className="border p-3 py-2 text-left">Applicant Name</th><th className="border p-3 py-2 text-left">Program</th><th className="border p-3 py-2 text-left">Status</th><th className="border p-3 py-2 text-left">Actions</th></tr></thead>
                 <tbody>
@@ -262,9 +371,9 @@ const AdminDashboard = () => {
               {/* Print-only header */}
               <div className="hidden print:block border-b border-gray-300 pb-4 w-full text-center">
                 <div className="flex flex-col items-center justify-center mb-2 print:text-[#E31E24]">
-                  <h1 className="text-2xl font-bold">{profile?.institute?.instituteName || 'MET Institute'}</h1>
+                  <h1 className="text-2xl font-bold">{viewDetails?.institute?.name || 'MET Institute'}</h1>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Application Form for {profile?.institute?.instituteName || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
+                <h2 className="text-xl font-semibold mb-2">Application Form for {viewDetails?.institute?.name || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
                 <p className="text-sm">Academic Year: 2025-2026</p>
               </div>
               <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none">
@@ -293,7 +402,7 @@ const AdminDashboard = () => {
                         <span className="font-semibold text-gray-700">Name:</span> {`${viewDetails.user.firstName || ''} ${viewDetails.user.middleName || ''} ${viewDetails.user.lastName || ''}`.trim() || 'N/A'}
                       </div>
                       <div>
-                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'N/A'}
+                        <span className="font-semibold text-gray-700">DOB:</span> {viewDetails.personal?.dob ? new Date(viewDetails.personal.dob).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
                       </div>
                       <div>
                         <span className="font-semibold text-gray-700">Gender:</span> {viewDetails.personal?.gender || 'N/A'}

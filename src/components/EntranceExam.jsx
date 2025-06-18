@@ -36,6 +36,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       xatScore: initialData.xatScore || '',
       xatScorePercent: initialData.xatScorePercent || '',
       percentile: initialData.percentile || '',
+      neetScore: initialData.neetScore || '',
     };
 
     const exams = ['cet', 'cat', 'cmat', 'gmat', 'mat', 'atma', 'xat'];
@@ -71,7 +72,10 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
     if (name.includes('ScorePercent')) {
       const val = parseFloat(value);
       if (isNaN(val) || val < 0 || val > 100) error = 'Percentile must be 0-100';
-    } 
+    } else if (name === 'neetScore') {
+      const val = parseFloat(value);
+      if (!isNaN(val) && val < 0) error = 'NEET Score cannot be negative';
+    }
     // else if (name.includes('Score')) {
     //   const val = parseFloat(value);
     //   if (isNaN(val) || val < 0 || val > 200) error = 'Score must be 0-200';
@@ -156,6 +160,24 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 disabled={disabled}
               />
               {errors.cetScorePercent && <p className="text-red-600 text-xs mt-1">{errors.cetScorePercent}</p>}
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">NEET Score</label>
+              <input
+                type="number"
+                name="neetScore"
+                value={formValues.neetScore}
+                onChange={handleChange}
+                min="0"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.neetScore || internalErrors.neetScore ? 'border-red-500' : 'border-gray-600'
+                }`}
+                placeholder="Enter NEET Score (if applicable)"
+                disabled={disabled}
+              />
+              {(errors.neetScore || internalErrors.neetScore) && (
+                <p className="text-red-600 text-xs mt-1">{errors.neetScore || internalErrors.neetScore}</p>
+              )}
             </div>
           </div>
         );

@@ -99,15 +99,22 @@ const RegistrationForm = () => {
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
     setIsLoading(true);
+    const payload = {
+      phoneNo: formData.phoneNo,
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      code: formData.instituteCode,
+    };
+    // console.log('Resend OTP payload:', payload); // Add log
     try {
-      const response = await axios.post('https://vacantseats.met.edu/api/auth/resend-otp', {
-        ...formData,
-        code: formData.instituteCode,
-      });
+      const response = await axios.post('https://vacantseats.met.edu/api/auth/resend-otp', payload);
+      // console.log('Resend OTP response:', response.data); // Add log
       setInstituteId(response.data.instituteId);
       setResendTimer(30);
       Swal.fire('OTP Resent', 'New OTP sent successfully', 'success');
     } catch (error) {
+      // console.error('Resend OTP error:', error.response?.data || error.message); // Add log
       Swal.fire('Error', error.response?.data?.message || 'Failed to resend OTP', 'error');
     } finally {
       setIsLoading(false);
