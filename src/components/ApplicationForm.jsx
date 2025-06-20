@@ -241,6 +241,7 @@ const ApplicationForm = () => {
       errorMessages.push('Email');
     }
 
+    // Validate signaturePhoto for all form types
     if (!formData.documents.signaturePhoto && !applicationId) {
       newErrors.signaturePhoto = 'Signature photo is required';
       errorMessages.push('Signature Photo');
@@ -250,10 +251,6 @@ const ApplicationForm = () => {
       if (!formData.documents.hscMarksheet && !applicationId) {
         newErrors.hscMarksheet = 'HSC marksheet is required';
         errorMessages.push('HSC Marksheet');
-      }
-      if (!formData.documents.fcVerification && !applicationId) {
-        newErrors.fcVerification = 'FC verification is required';
-        errorMessages.push('FC Verification');
       }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
@@ -290,9 +287,9 @@ const ApplicationForm = () => {
       //   newErrors.cetScoreCard = 'CET score card is required';
       //   errorMessages.push('CET Score Card');
       // }
-      if (!formData.documents.fcVerificationAck && !applicationId) {
-        newErrors.fcVerificationAck = 'FC verification acknowledgment is required';
-        errorMessages.push('FC Verification Acknowledgment');
+      if (!formData.documents.fcReceipt && !applicationId) {
+        newErrors.fcReceipt = 'FC receipt is required';
+        errorMessages.push('FC Receipt');
       }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
@@ -500,7 +497,6 @@ const ApplicationForm = () => {
       });
     }
     return Object.keys(mergedErrors).every((key) => !mergedErrors[key]);
-
   };
 
   const handleSubmit = async (e, isFinal = false) => {
@@ -511,7 +507,6 @@ const ApplicationForm = () => {
       formRef.current.reportValidity();
       return;
     }
-
 
     if (!formType) {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Form type is not set.' });
@@ -531,11 +526,7 @@ const ApplicationForm = () => {
     Object.entries(formData.documents).forEach(([key, value]) => {
       if (value && typeof value !== 'string') formDataToSend.append(key, value);
     });
-    formDataToSend.append('isFinalSubmitted', isFinal); // Match backend expectation
-    // console.log('FormData sent:', {
-    //   formType: formDataToSend.get('formType'),
-    //   isFinalSubmitted: formDataToSend.get('isFinalSubmitted'),
-    // }); // Debug log
+    formDataToSend.append('isFinalSubmitted', isFinal);
 
     try {
       const token = localStorage.getItem('token');
@@ -560,10 +551,8 @@ const ApplicationForm = () => {
       const data = await response.json();
 
       if (data.success) {
-        // console.log('Full server response:', data); // Log the entire response
-        const newApplicationId = data.application?.applicationId || data.applicationId || data.id; // Check alternative keys
+        const newApplicationId = data.application?.applicationId || data.applicationId || data.id;
         if (!newApplicationId && !applicationId) {
-          // If no applicationId is returned and this is a new submission, fetch the latest application
           const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
             headers: { 'Authorization': `Bearer ${token}` },
           });
@@ -593,9 +582,6 @@ const ApplicationForm = () => {
           Swal.fire({
             icon: 'success',
             title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
-            // text: isFinal
-            //   ? 'Your application has been successfully submitted.'
-            //   : `Application ${applicationId ? 'updated' : 'submitted'} successfully: ${newApplicationId}`,
           });
           if (isFinal) {
             navigate(`/submission-confirmation/${newApplicationId}`);
@@ -629,7 +615,7 @@ const ApplicationForm = () => {
           text: 'You must agree to the terms before submitting the application.',
         });
       } else {
-        handleSubmit(e, true); // Fix: Call handleSubmit instead of handleFinalSubmit
+        handleSubmit(e, true);
       }
     }
   };
@@ -650,7 +636,7 @@ const ApplicationForm = () => {
   const updateFormData = useCallback((section, dataOrEvent) => {
     const data = dataOrEvent?.values || dataOrEvent;
 
-    if (!data || typeof data !== 'object') return; // ✅ prevent Object.keys crash
+    if (!data || typeof data !== 'object') return;
 
     setFormData((prev) => {
       if (section === 'education') {
@@ -680,8 +666,6 @@ const ApplicationForm = () => {
       };
     });
   }, []);
-
-
 
   const formTypeNames = {
     METIPP: 'Pharmacy Diploma',

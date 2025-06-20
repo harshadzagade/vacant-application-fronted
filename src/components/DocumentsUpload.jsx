@@ -7,7 +7,6 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     cetScoreCard: null,
     fcReceipt: null,
     hscMarksheet: null,
-    fcVerification: null,
   });
 
   const [filePreviews, setFilePreviews] = useState({
@@ -15,12 +14,10 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     cetScoreCard: null,
     fcReceipt: null,
     hscMarksheet: null,
-    fcVerification: null,
-
   });
 
   const [fileErrors, setFileErrors] = useState({});
-  const [isUploading, setIsUploading] = useState({}); // Bug 12: Added loading state for file uploads
+  const [isUploading, setIsUploading] = useState({});
 
   useEffect(() => {
     if (!initialData) return;
@@ -59,7 +56,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     const { name, files } = e.target;
     if (!files[0]) return;
 
-    setIsUploading((prev) => ({ ...prev, [name]: true })); // Bug 12: Set loading state
+    setIsUploading((prev) => ({ ...prev, [name]: true }));
     const file = files[0];
     const maxSize = 5 * 1024 * 1024; // 5MB limit
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -72,7 +69,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       setUploadedFiles((prev) => ({ ...prev, [name]: null }));
       setFilePreviews((prev) => ({ ...prev, [name]: null }));
       onUpdate({ [name]: null });
-      setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
+      setIsUploading((prev) => ({ ...prev, [name]: false }));
       return;
     }
 
@@ -84,7 +81,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
       setUploadedFiles((prev) => ({ ...prev, [name]: null }));
       setFilePreviews((prev) => ({ ...prev, [name]: null }));
       onUpdate({ [name]: null });
-      setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
+      setIsUploading((prev) => ({ ...prev, [name]: false }));
       return;
     }
 
@@ -97,7 +94,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     setFilePreviews((prev) => ({ ...prev, [name]: previewUrl }));
     setFileErrors((prev) => ({ ...prev, [name]: '' }));
     onUpdate({ [name]: file });
-    setIsUploading((prev) => ({ ...prev, [name]: false })); // Bug 12: Clear loading state
+    setIsUploading((prev) => ({ ...prev, [name]: false }));
 
     console.log(`Selected file for ${name}:`, file);
   };
@@ -124,18 +121,17 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
     if (!file) return false;
     if (typeof file === 'string') {
       const extension = file.split('.').pop().toLowerCase();
-      return ['jpeg', 'jpg', 'png'].includes(extension); // Bug 7: Simplified extension check
+      return ['jpeg', 'jpg', 'png'].includes(extension);
     }
-    return ['image/jpeg', 'image/png'].includes(file.type); // Bug 7: Check MIME type for uploaded files
+    return ['image/jpeg', 'image/png'].includes(file.type);
   };
 
   const renderDocumentFields = () => {
     const fields = [
       { key: 'signaturePhoto', label: 'Signature Photo *', accept: 'image/jpeg,image/png', required: true },
       { key: 'cetScoreCard', label: 'CET Score Card *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM'].includes(formType) },
-      { key: 'fcReceipt', label: 'FC Receipt *', accept: 'application/pdf,image/jpeg,image/png', required: formType === 'METIOM' },
+      { key: 'fcReceipt', label: 'FC Receipt *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM', 'METIOM'].includes(formType) },
       { key: 'hscMarksheet', label: 'HSC Marksheet *', accept: 'application/pdf,image/jpeg,image/png', required: ['METIPP', 'METIPD'].includes(formType) },
-      { key: 'fcVerification', label: 'FC Verification Copy *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPP', 'METIPD'].includes(formType) },
     ];
 
     return (
@@ -191,11 +187,11 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
                       errors[key] || fileErrors[key] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     accept={accept}
-                    disabled={disabled || isUploading[key]} // Bug 12: Disable during upload
+                    disabled={disabled || isUploading[key]}
                     aria-invalid={errors[key] || fileErrors[key] ? 'true' : 'false'}
                     aria-label={label}
                   />
-                  {isUploading[key] && ( // Bug 12: Show loading indicator
+                  {isUploading[key] && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <svg className="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
