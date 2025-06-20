@@ -56,7 +56,7 @@ const ApplicationForm = () => {
         }
 
         // Fetch user data
-        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
+        const userResponse = await fetch('https://admission.met.edu/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) {
@@ -107,7 +107,7 @@ const ApplicationForm = () => {
         }));
 
         // Fetch existing applications
-        const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
+        const appResponse = await fetch('https://admission.met.edu/api/application', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!appResponse.ok) {
@@ -133,7 +133,7 @@ const ApplicationForm = () => {
           setApplicationId(matchingApplication.applicationId);
           // Fetch application details
           const detailsResponse = await fetch(
-            `https://vacantseats.met.edu/api/application/details/${matchingApplication.applicationId}`,
+            `https://admission.met.edu/api/application/details/${matchingApplication.applicationId}`,
             {
               headers: { 'Authorization': `Bearer ${token}` },
             }
@@ -536,7 +536,7 @@ const ApplicationForm = () => {
         return;
       }
 
-      const url = applicationId ? `https://vacantseats.met.edu/api/application/update/${applicationId}` : 'https://vacantseats.met.edu/api/application/submit';
+      const url = applicationId ? `https://admission.met.edu/api/application/update/${applicationId}` : 'https://admission.met.edu/api/application/submit';
       const method = applicationId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -553,7 +553,7 @@ const ApplicationForm = () => {
       if (data.success) {
         const newApplicationId = data.application?.applicationId || data.applicationId || data.id;
         if (!newApplicationId && !applicationId) {
-          const appResponse = await fetch('https://vacantseats.met.edu/api/application', {
+          const appResponse = await fetch('https://admission.met.edu/api/application', {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (!appResponse.ok) {

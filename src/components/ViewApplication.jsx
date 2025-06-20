@@ -32,7 +32,7 @@ const ViewApplication = () => {
           return;
         }
 
-        const userResponse = await fetch('https://vacantseats.met.edu/api/auth/user', {
+        const userResponse = await fetch('https://admission.met.edu/api/auth/user', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
@@ -40,7 +40,7 @@ const ViewApplication = () => {
         if (!userResult.success) throw new Error(userResult.message || 'User data fetch failed');
         setUserData(userResult.user);
 
-        const appResponse = await fetch(`https://vacantseats.met.edu/api/application/details/${applicationId}`, {
+        const appResponse = await fetch(`https://admission.met.edu/api/application/details/${applicationId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!appResponse.ok) throw new Error('Failed to fetch application details');
@@ -565,7 +565,7 @@ const ViewApplication = () => {
                 <strong>{fullName}</strong>
                 {applicationData.documents.signaturePhoto ? (
                   <img
-                    src={`https://vacantseats.met.edu/${applicationData.documents.signaturePhoto}`}
+                    src={`https://admission.met.edu/${applicationData.documents.signaturePhoto}`}
                     alt="Signature"
                     className="w-32 h-20 object-contain mt-2 print:w-24 print:h-16 print:mt-1"
                     style={{ maxWidth: '100%' }}

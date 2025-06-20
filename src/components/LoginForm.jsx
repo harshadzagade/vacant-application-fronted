@@ -47,7 +47,7 @@ const LoginForm = () => {
     setServerError('');
 
     try {
-      const response = await fetch('https://vacantseats.met.edu/api/auth/login', {
+      const response = await fetch('https://admission.met.edu/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

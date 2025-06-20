@@ -14,7 +14,7 @@ const AdminLogin = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await axios.post('https://vacantseats.met.edu/api/admin/auth/login', {
+            const response = await axios.post('https://admission.met.edu/api/admin/auth/login', {
                 email,
                 password,
                 isAdmin: true, // Flag to indicate admin login

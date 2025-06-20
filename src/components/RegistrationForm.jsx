@@ -81,7 +81,7 @@ const RegistrationForm = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('https://vacantseats.met.edu/api/auth/register', {
+      const response = await axios.post('https://admission.met.edu/api/auth/register', {
         ...formData,
         code: formData.instituteCode,
       });
@@ -108,7 +108,7 @@ const RegistrationForm = () => {
     };
     // console.log('Resend OTP payload:', payload); // Add log
     try {
-      const response = await axios.post('https://vacantseats.met.edu/api/auth/resend-otp', payload);
+      const response = await axios.post('https://admission.met.edu/api/auth/resend-otp', payload);
       // console.log('Resend OTP response:', response.data); // Add log
       setInstituteId(response.data.instituteId);
       setResendTimer(30);
@@ -125,7 +125,7 @@ const RegistrationForm = () => {
     if (!validateOtp()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('https://vacantseats.met.edu/api/auth/verify-otp', {
+      const response = await axios.post('https://admission.met.edu/api/auth/verify-otp', {
         ...formData,
         otp,
         instituteId,

@@ -41,19 +41,19 @@ const AdminDashboard = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const profRes = await axios.get('https://vacantseats.met.edu/api/admin/auth/profile', { headers });
+        const profRes = await axios.get('https://admission.met.edu/api/admin/auth/profile', { headers });
         if (profRes.data.success) setProfile(profRes.data.staff);
         else throw new Error(profRes.data.message || 'Failed to load profile');
         // console.log('Profile Response:', profRes.data.staff);
 
 
-        const appsRes = await axios.get('https://vacantseats.met.edu/api/admin/applications', { headers });
+        const appsRes = await axios.get('https://admission.met.edu/api/admin/applications', { headers });
         // console.log('Applications Response:', appsRes.data.applications);
         if (appsRes.data.success) setApplications(appsRes.data.applications);
         else throw new Error(appsRes.data.message || 'Failed to load applications');
 
 
-        const instRes = await axios.get('https://vacantseats.met.edu/api/admin/applications/institutes', { headers });
+        const instRes = await axios.get('https://admission.met.edu/api/admin/applications/institutes', { headers });
         if (instRes.data.success) setInstitutes(instRes.data.institutes || []);
         else throw new Error(instRes.data.message || 'Failed to load institutes');
 
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
-        `https://vacantseats.met.edu/api/admin/applications/details/${applicationId}`,
+        `https://admission.met.edu/api/admin/applications/details/${applicationId}`,
         { headers }
       );
 
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `https://vacantseats.met.edu/api/admin/applications/status/${applicationId}`,
+        `https://admission.met.edu/api/admin/applications/status/${applicationId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -249,7 +249,7 @@ const AdminDashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.delete('https://vacantseats.met.edu/api/admin/applications/bulk-delete', {
+      const res = await axios.delete('https://admission.met.edu/api/admin/applications/bulk-delete', {
         headers: { Authorization: `Bearer ${token}` },
         data: { applicationIds: selectedApps },
       });
@@ -700,10 +700,10 @@ const AdminDashboard = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                 </svg>
                                 <div>
-                                  <a href={`https://vacantseats.met.edu/${path}`} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 print:no-underline print:text-black">
+                                  <a href={`https://admission.met.edu/${path}`} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 print:no-underline print:text-black">
                                     {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                                   </a>
-                                  {/* <span className="block text-sm text-gray-600 print:inline print:text-black">https://vacantseats.met.edu/{path}</span> */}
+                                  {/* <span className="block text-sm text-gray-600 print:inline print:text-black">https://admission.met.edu/{path}</span> */}
                                 </div>
                               </div>
                             </li>
@@ -734,7 +734,7 @@ const AdminDashboard = () => {
                   <p className="text-gray-800">
                     <strong>{viewDetails.user?.firstName + ' ' + viewDetails.user?.lastName || 'Signature'}</strong> {viewDetails.documents?.signaturePhoto ? (
                       <img
-                        src={`https://vacantseats.met.edu/${viewDetails.documents.signaturePhoto}`}
+                        src={`https://admission.met.edu/${viewDetails.documents.signaturePhoto}`}
                         alt="Signature"
                         className="w-32 h-20 object-contain mt-2"
                         style={{ maxWidth: '100%' }}
@@ -757,13 +757,13 @@ const AdminDashboard = () => {
 
                       {path.endsWith('.pdf') ? (
                         <iframe
-                          src={`https://vacantseats.met.edu/${path}`}
+                          src={`https://admission.met.edu/${path}`}
                           className="w-full h-[1000px]"
                           title={key}
                         />
                       ) : (
                         <img
-                          src={`https://vacantseats.met.edu/${path}`}
+                          src={`https://admission.met.edu/${path}`}
                           alt={key}
                           className="mx-auto max-w-full h-auto"
                         />
