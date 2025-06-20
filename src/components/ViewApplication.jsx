@@ -269,7 +269,7 @@ const ViewApplication = () => {
                             </tr>
                           </thead>
                           <tbody>
-                             <tr>
+                            <tr>
                               <td className="border border-gray-300 p-1 text-sm"> Application ID</td>
                               {exams.map((exam) => (
                                 <td key={exam} className="border border-gray-300 p-1 text-sm">
@@ -683,10 +683,17 @@ const ViewApplication = () => {
       }
       @page {
         size: auto;
-        margin: 0.5in; /* Increased margin to prevent content from sticking to borders */
+        margin: 0.6in 0.5in;
+        @bottom-center {
+          content: "";
+        }
+        @top-center {
+          // color: red;
+          content: " ";
+        }
       }
     }
-  `}
+      `}
       </style>
     </div>
   );

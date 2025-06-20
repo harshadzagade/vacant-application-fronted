@@ -782,28 +782,30 @@ const AdminDashboard = () => {
                     body {
                       background: white;
                       margin: 0;
+                      font-size: 10pt !important;
                     }
-                    .fixed.inset-0 {
-                      position: static !important;
-                      background: white !important;
+                    .min-h-screen {
+                      min-height: auto;
+                      padding: 0;
                     }
-                    .max-h-[80vh] {
-                      max-height: none !important;
-                    }
-                    .overflow-y-auto {
-                      overflow: visible !important;
+                    .print\\:min-h-0 {
+                      min-height: 0 !important;
                     }
                     .print\\:shadow-none {
                       box-shadow: none !important;
                     }
-                    .print\\:p-4 {
-                      padding: 1rem !important;
-                    }
-                    .print\\:rounded-none {
-                      border-radius: 0 !important;
+                    .print\\:p-0 {
+                      padding: 0 !important;
                     }
                     .print\\:max-w-none {
                       max-width: none !important;
+                    }
+                    .print\\:mx-0 {
+                      margin-left: 0 !important;
+                      margin-right: 0 !important;
+                    }
+                    .print\\:rounded-none {
+                      border-radius: 0 !important;
                     }
                     .print\\:bg-white {
                       background: white !important;
@@ -811,9 +813,20 @@ const AdminDashboard = () => {
                     .print\\:hidden {
                       display: none !important;
                     }
+                    .print\\:avoid-page-break {
+                      break-inside: avoid;
+                      page-break-inside: avoid;
+                    }
+                    .print\\:avoid-page-break-after {
+                      break-after: avoid;
+                      page-break-after: avoid;
+                    }
+                    h1 {
+                      font-size: 16pt !important;
+                    }
                     h2 {
-                      font-size: 1.25rem !important;
-                      margin-bottom: 0.5rem !important;
+                      font-size: 12pt !important;
+                      margin-bottom: 0.25rem !important;
                     }
                     .border-gray-200 {
                       border: 1px solid #ccc !important;
@@ -821,17 +834,17 @@ const AdminDashboard = () => {
                     .shadow-sm, .hover\\:shadow-md {
                       box-shadow: none !important;
                     }
-                    .rounded-xl {
+                    .rounded-2xl {
                       border-radius: 0 !important;
                     }
                     .bg-gradient-to-b {
                       background: #fff !important;
                     }
                     .grid {
-                      gap: 0.25rem !important;
+                      gap: 0.125rem !important;
                     }
                     .space-y-6 > * + * {
-                      margin-top: 0.5rem !important;
+                      margin-top: 0.25rem !important;
                     }
                     .text-gray-800, .text-gray-700, .text-gray-600 {
                       color: #000 !important;
@@ -839,15 +852,34 @@ const AdminDashboard = () => {
                     svg {
                       display: none !important;
                     }
+                    main {
+                      break-before: avoid;
+                      page-break-before: avoid;
+                      margin-top: 0 !important;
+                      padding-top: 0 !important;
+                    }
+                    section {
+                      break-inside: avoid;
+                      page-break-inside: avoid;
+                      margin-top: 0.25rem !important;
+                    }
+                    div:has(> main) {
+                      break-before: avoid;
+                      page-break-before: avoid;
+                    }
                     @page {
                       size: auto;
-                      margin: 0.2in;
-                    }
-                    .break-after-page {
-                      page-break-after: always;
+                      margin: 0.6in 0.5in;
+                      @bottom-center {
+                        content: "";
+                      }
+                      @top-center {
+                        // color: red;
+                        content: " ";
+                      }
                     }
                   }
-                `}
+                    `}
               </style>
             </div>
           )}
