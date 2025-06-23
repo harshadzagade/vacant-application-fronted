@@ -19,12 +19,29 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [InstituteName, setInstituteName] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     if (code) setFormData((prev) => ({ ...prev, instituteCode: code }));
+
+    // Fetch and set the institute name
+    axios
+      .get(`http://localhost:5000/api/auth/institute-name/${code}`)
+      .then((response) => {
+        if (response.data?.institute?.programName) {
+          setInstituteName(response.data.institute.programName);
+        }
+
+        
+      })
+      .catch((error) => {
+        console.error('Error fetching institute name:', error);
+        setInstituteName('Unknown Institute');
+      });
   }, []);
 
   useEffect(() => {
@@ -54,20 +71,6 @@ const RegistrationForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const instituteName = async () => {
-    try {
-      console.log('Fetching institute name for code:', formData.instituteCode);
-      
-      const response = await axios.get(`https://admission.met.edu/api/auth/institute-name/${formData.instituteCode}`);
-      console.log('Institute name response:', response.data);
-      
-      return response.data.name;
-    }
-    catch (error) {
-      console.error('Error fetching institute name:', error);
-      return 'Unknown Institute';
-    } 
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -85,7 +88,7 @@ const RegistrationForm = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('https://admission.met.edu/api/auth/register', {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
         ...formData,
         code: formData.instituteCode,
       });
@@ -106,7 +109,7 @@ const RegistrationForm = () => {
     if (resendTimer > 0) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('https://admission.met.edu/api/auth/resend-otp', {
+      const response = await axios.post('http://localhost:5000/api/auth/resend-otp', {
         phoneNo: formData.phoneNo,
         email: formData.email,
         firstName: formData.firstName,
@@ -127,7 +130,7 @@ const RegistrationForm = () => {
     if (!validateOtp()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('https://admission.met.edu/api/auth/verify-otp', {
+      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
         ...formData,
         otp,
         instituteId,
@@ -156,7 +159,7 @@ const RegistrationForm = () => {
         <div className="flex justify-center mb-6">
           <img src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png" alt="Logo" className="h-[5rem] w-auto" />
         </div>
-        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">Admissions Application for {instituteName}</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">Admissions Application for  { InstituteName || '....' }</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <input
