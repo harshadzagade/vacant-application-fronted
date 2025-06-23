@@ -30,7 +30,7 @@ const RegistrationForm = () => {
 
     // Fetch and set the institute name
     axios
-      .get(`http://localhost:5000/api/auth/institute-name/${code}`)
+      .get(`https://admission.met.edu/api/auth/institute-name/${code}`)
       .then((response) => {
         if (response.data?.institute?.programName) {
           setInstituteName(response.data.institute.programName);
@@ -88,7 +88,7 @@ const RegistrationForm = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await axios.post('https://admission.met.edu/api/auth/register', {
         ...formData,
         code: formData.instituteCode,
       });
@@ -109,7 +109,7 @@ const RegistrationForm = () => {
     if (resendTimer > 0) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/resend-otp', {
+      const response = await axios.post('https://admission.met.edu/api/auth/resend-otp', {
         phoneNo: formData.phoneNo,
         email: formData.email,
         firstName: formData.firstName,
@@ -130,7 +130,7 @@ const RegistrationForm = () => {
     if (!validateOtp()) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+      const response = await axios.post('https://admission.met.edu/api/auth/verify-otp', {
         ...formData,
         otp,
         instituteId,
