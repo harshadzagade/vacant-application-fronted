@@ -26,6 +26,7 @@ const ApplicationForm = () => {
     institutes: [],
   });
   const [submissionStatus] = useState(null);
+  const [isFinalSubmissionAttempt, setIsFinalSubmissionAttempt] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const formRef = useRef();
@@ -196,7 +197,7 @@ const ApplicationForm = () => {
     fetchUserDataAndApplication();
   }, [navigate]);
 
-  const validateForm = () => {
+  const validateForm = (isFinal = false) => {
     if (!formType) {
       setErrors({});
       return false;
@@ -247,6 +248,14 @@ const ApplicationForm = () => {
       errorMessages.push('Signature Photo');
     }
 
+    // Validate fcReceipt only for final submission
+    if (isFinal && ['METICS', 'METIPD', 'METIOM', 'METIPP'].includes(formType)) {
+      if (!formData.documents.fcReceipt && !applicationId) {
+        newErrors.fcReceipt = 'FC receipt is required for final submission';
+        errorMessages.push('FC Receipt');
+      }
+    }
+
     if (formType === 'METIPP') {
       if (!formData.documents.hscMarksheet && !applicationId) {
         newErrors.hscMarksheet = 'HSC marksheet is required';
@@ -254,10 +263,10 @@ const ApplicationForm = () => {
       }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
-        newErrors['hsc.marks'] = 'HSC Marks is required';
+        newErrors['hsc.marks'] = 'HSC Total Marks is required';
         newErrors['hsc.percent'] = 'HSC Percentage is required';
         newErrors['hsc.englishMarks'] = 'HSC English Marks is required';
-        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage', 'HSC English Marks');
+        errorMessages.push('HSC Board', 'HSC Total Marks', 'HSC Percentage', 'HSC English Marks');
       } else {
         if (!formData.education.hsc.board) {
           newErrors['hsc.board'] = 'HSC Board is required';
@@ -287,25 +296,21 @@ const ApplicationForm = () => {
       //   newErrors.cetScoreCard = 'CET score card is required';
       //   errorMessages.push('CET Score Card');
       // }
-      if (!formData.documents.fcReceipt && !applicationId) {
-        newErrors.fcReceipt = 'FC receipt is required';
-        errorMessages.push('FC Receipt');
-      }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
-        newErrors['hsc.school'] = 'School Name is required';
+        newErrors['hsc.college'] = 'College Name is required';
         newErrors['hsc.stream'] = 'Stream is required';
-        newErrors['hsc.marks'] = 'HSC Marks are required';
+        newErrors['hsc.marks'] = 'HSC Total Marks are required';
         newErrors['hsc.percent'] = 'HSC Percentage is required';
-        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
+        errorMessages.push('HSC Board', 'HSC Total Marks', 'HSC Percentage');
       } else {
         if (!formData.education.hsc.board) {
           newErrors['hsc.board'] = 'HSC Board is required';
           errorMessages.push('HSC Board');
         }
         if (!formData.education.hsc.marks) {
-          newErrors['hsc.marks'] = 'HSC Marks is required';
-          errorMessages.push('HSC Marks');
+          newErrors['hsc.marks'] = 'HSC Total Marks is required';
+          errorMessages.push('HSC Total Marks');
         }
         if (!formData.education.hsc.percent) {
           newErrors['hsc.percent'] = 'HSC Percentage is required';
@@ -337,33 +342,29 @@ const ApplicationForm = () => {
       //   newErrors.cetScoreCard = 'CET score card is required';
       //   errorMessages.push('CET Score Card');
       // }
-      if (!formData.documents.fcReceipt && !applicationId) {
-        newErrors.fcReceipt = 'FC receipt is required';
-        errorMessages.push('FC Receipt');
-      }
       if (!formData.education.hsc) {
         newErrors['hsc.board'] = 'HSC Board is required';
-        newErrors['hsc.school'] = 'School Name is required';
+        newErrors['hsc.college'] = 'College Name is required';
         newErrors['hsc.stream'] = 'Stream is required';
-        newErrors['hsc.marks'] = 'HSC Marks is required';
+        newErrors['hsc.marks'] = 'HSC Total Marks is required';
         newErrors['hsc.percent'] = 'HSC Percentage is required';
-        errorMessages.push('HSC Board', 'HSC Marks', 'HSC Percentage');
+        errorMessages.push('HSC Board', 'HSC Total Marks', 'HSC Percentage');
       } else {
         if (!formData.education.hsc.board) {
           newErrors['hsc.board'] = 'HSC Board is required';
           errorMessages.push('HSC Board');
         }
-        if (!formData.education.hsc.school) {
-          newErrors['hsc.school'] = 'HSC School Name is required';
-          errorMessages.push('HSC School Name');
+        if (!formData.education.hsc.college) {
+          newErrors['hsc.college'] = 'HSC College Name is required';
+          errorMessages.push('HSC College Name');
         }
         if (!formData.education.hsc.stream) {
           newErrors['hsc.stream'] = 'HSC Stream is required';
           errorMessages.push('HSC Stream');
         }
         if (!formData.education.hsc.marks) {
-          newErrors['hsc.marks'] = 'HSC Marks is required';
-          errorMessages.push('HSC Marks');
+          newErrors['hsc.marks'] = 'HSC Total Marks is required';
+          errorMessages.push('HSC Total Marks');
         }
         if (!formData.education.hsc.percent) {
           newErrors['hsc.percent'] = 'HSC Percentage is required';
@@ -421,26 +422,22 @@ const ApplicationForm = () => {
         newErrors.cetScoreCard = 'CET score card is required';
         errorMessages.push('CET Score Card');
       }
-      if (!formData.documents.fcReceipt && !applicationId) {
-        newErrors.fcReceipt = 'FC receipt is required';
-        errorMessages.push('FC Receipt');
-      }
       ['graduation'].forEach((level) => {
         if (!formData.education[level]) {
           newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
-          newErrors[`${level}.school`] = `${level.toUpperCase()} School Name is required`;
+          newErrors[`${level}.college`] = `${level.toUpperCase()} College Name is required`;
           newErrors[`${level}.stream`] = `${level.toUpperCase()} Stream is required`;
-          newErrors[`${level}.marks`] = `${level.toUpperCase()} Marks is required`;
+          newErrors[`${level}.marks`] = `${level.toUpperCase()} Total Marks is required`;
           newErrors[`${level}.percent`] = `${level.toUpperCase()} Percentage is required`;
-          errorMessages.push(`${level.toUpperCase()} Board`, `${level.toUpperCase()} Marks`, `${level.toUpperCase()} Percentage`);
+          errorMessages.push(`${level.toUpperCase()} Board`, `${level.toUpperCase()} Total Marks`, `${level.toUpperCase()} Percentage`);
         } else {
           if (!formData.education[level].board) {
             newErrors[`${level}.board`] = `${level.toUpperCase()} Board is required`;
             errorMessages.push(`${level.toUpperCase()} Board`);
           }
-          if (!formData.education[level].school) {
-            newErrors[`${level}.school`] = `${level.toUpperCase()} School Name is required`;
-            errorMessages.push(`${level.toUpperCase()} School Name`);
+          if (!formData.education[level].college) {
+            newErrors[`${level}.college`] = `${level.toUpperCase()} College Name is required`;
+            errorMessages.push(`${level.toUpperCase()} College Name`);
           }
           if (!formData.education[level].stream) {
             newErrors[`${level}.stream`] = `${level.toUpperCase()} Stream is required`;
@@ -502,6 +499,8 @@ const ApplicationForm = () => {
   const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
 
+    setIsFinalSubmissionAttempt(isFinal);  // Set flag for final submission attempt
+
     // 🔒 Trigger browser-based validation
     if (formRef.current && !formRef.current.checkValidity()) {
       formRef.current.reportValidity();
@@ -512,7 +511,7 @@ const ApplicationForm = () => {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Form type is not set.' });
       return;
     }
-    if (!validateForm()) return;
+    if (!validateForm(isFinal)) return;
     if (isFinal && !termsAgreed) {
       Swal.fire({ icon: 'warning', title: 'Terms Agreement', text: 'You must agree to the terms.' });
       return;
@@ -742,6 +741,8 @@ const ApplicationForm = () => {
             errors={errors}
             initialData={documentsData}
             disabled={isFinalSubmitted}
+            isFinalSubmission={isFinalSubmissionAttempt}
+            applicationId={applicationId}
           />
           {!isFinalSubmitted && (
             <div className="mt-8 flex justify-between">

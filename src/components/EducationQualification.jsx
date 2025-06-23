@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 const EducationQualification = ({ formType, onUpdate, errors, initialData, disabled }) => {
   const [graduationStatus, setGraduationStatus] = useState('');
   const [formValues, setFormValues] = useState({
-    ssc: { board: '', school: '', stream: '', marks: '', percent: '', year: '' },
-    hsc: { board: '', school: '', stream: '', marks: '', percent: '', year: '', pcmMarks: '', pcbMarks: '', englishMarks: '' },
-    graduation: { board: '', school: '', stream: '', marks: '', percent: '', year: '', status: '', graduationStatus: '' },
+    ssc: { board: '', college: '', stream: '', marks: '', percent: '', year: '' },
+    hsc: { board: '', college: '', stream: '', marks: '', percent: '', year: '', pcmMarks: '', pcbMarks: '', englishMarks: '' },
+    graduation: { board: '', college: '', stream: '', marks: '', percent: '', year: '', status: '', graduationStatus: '' },
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const lastSyncedValues = useRef(null);
@@ -17,7 +17,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
     const newFormValues = {
       ssc: {
         board: initialData.ssc?.board || '',
-        school: initialData.ssc?.school || '',
+        college: initialData.ssc?.college || '',
         stream: initialData.ssc?.stream || '',
         marks: initialData.ssc?.marks || '',
         percent: initialData.ssc?.percent || '',
@@ -25,7 +25,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
       },
       hsc: {
         board: initialData.hsc?.board || '',
-        school: initialData.hsc?.school || '',
+        college: initialData.hsc?.college || '',
         stream: initialData.hsc?.stream || '',
         marks: initialData.hsc?.marks || '',
         percent: initialData.hsc?.percent || '',
@@ -36,7 +36,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
       },
       graduation: {
         board: initialData.graduation?.board || '',
-        school: initialData.graduation?.school || '',
+        college: initialData.graduation?.college || '',
         stream: initialData.graduation?.stream || '',
         marks: initialData.graduation?.marks || '',
         percent: initialData.graduation?.percent || '',
@@ -63,7 +63,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
     let error = '';
 
     const isGraduationAppearing = level === 'graduation' && graduationStatus === 'appearing';
-    const isRequiredField = ['board', 'school', 'stream', 'marks', 'percent', 'year'].includes(field) && !(isGraduationAppearing && ['marks', 'percent'].includes(field));
+    const isRequiredField = ['board', 'college', 'stream', 'marks', 'percent', 'year'].includes(field) && !(isGraduationAppearing && ['marks', 'percent'].includes(field));
 
     if (isRequiredField && !value) {
       error = `${field.replace(/([A-Z])/g, ' $1')} is required`;
@@ -144,10 +144,10 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
 
   const renderFields = (level) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {['board', 'school', 'stream', 'marks', 'percent', 'year'].map((field) => {
+      {['board', 'college', 'stream', 'marks', 'percent', 'year'].map((field) => {
         const isGraduationAppearing = level === 'graduation' && graduationStatus === 'appearing';
         const shouldHide = isGraduationAppearing && ['marks', 'percent'].includes(field);
-        const isRequired = !shouldHide && ['board', 'school', 'stream', 'marks', 'percent', 'year'].includes(field);
+        const isRequired = !shouldHide && ['board', 'college', 'stream', 'marks', 'percent', 'year'].includes(field);
 
         if (shouldHide) return null;
 
@@ -160,7 +160,7 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
         return (
           <div key={field}>
             <label className="block text-brand-700 text-sm font-medium mb-2">
-              {field.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (l) => l.toUpperCase())}{' '}
+              {field === 'marks' ? 'Total Marks' : field.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (l) => l.toUpperCase())}{' '}
               {isRequired && '*'}
             </label>
             <input

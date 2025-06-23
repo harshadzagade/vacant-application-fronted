@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) => {
+const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled, isFinalSubmission, applicationId }) => {
   const [uploadedFiles, setUploadedFiles] = useState({
     signaturePhoto: null,
     cetScoreCard: null,
@@ -128,19 +128,28 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled }) 
 
   const renderDocumentFields = () => {
     const fields = [
-      { key: 'signaturePhoto', label: 'Signature Photo *', accept: 'image/jpeg,image/png', required: true },
-      { key: 'cetScoreCard', label: 'CET Score Card *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM'].includes(formType) },
-      { key: 'fcReceipt', label: 'FC Receipt *', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM', 'METIOM'].includes(formType) },
-      { key: 'hscMarksheet', label: 'HSC Marksheet *', accept: 'application/pdf,image/jpeg,image/png', required: ['METIPP', 'METIPD'].includes(formType) },
+      { key: 'signaturePhoto', label: 'Signature Photo', accept: 'image/jpeg,image/png', required: true },
+      { key: 'cetScoreCard', label: 'CET Score Card', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM'].includes(formType) },
+      {
+        key: 'fcReceipt',
+        label: 'FC Receipt',
+        accept: 'application/pdf,image/jpeg,image/png',
+        required: isFinalSubmission && ['METICS', 'METIPD', 'METIOM', 'METIPP'].includes(formType),
+        shouldRender: ['METICS', 'METIPD', 'METIOM', 'METIPP'].includes(formType) && !!applicationId,
+      },
+      { key: 'hscMarksheet', label: 'HSC Marksheet', accept: 'application/pdf,image/jpeg,image/png', required: ['METIPP', 'METIPD'].includes(formType) },
     ];
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {fields.map(
-          ({ key, label, accept, required }) =>
-            required && (
+          ({ key, label, accept, required, shouldRender }) =>
+            (required || shouldRender) && (
               <div key={key} className="space-y-3">
-                <label className="block text-gray-800 text-sm font-medium mb-2">{label}</label>
+                <label className="block text-gray-800 text-sm font-medium mb-2">
+                  {label}
+                  {required && <span className="text-red-500"> *</span>}
+                </label>
                 {uploadedFiles[key] && (
                   <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex items-center space-x-3">
@@ -231,12 +240,16 @@ DocumentsUpload.propTypes = {
   errors: PropTypes.object,
   initialData: PropTypes.object,
   disabled: PropTypes.bool,
+  isFinalSubmission: PropTypes.bool,
+  applicationId: PropTypes.string, // Add prop type for applicationId
 };
 
 DocumentsUpload.defaultProps = {
   errors: {},
   initialData: {},
   disabled: false,
+  isFinalSubmission: false,
+  applicationId: null,
 };
 
 export default DocumentsUpload;
