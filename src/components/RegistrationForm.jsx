@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+
+// Mapping of institute codes to program names
+const instituteMap = {
+  METICS: 'MCA',
+  METIOM: 'MMS',
+  METIPD: 'Pharmacy Degree',
+  METIPP: 'Pharmacy Diploma',
+};
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -19,30 +27,48 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const [InstituteName, setInstituteName] = useState('');
+  const [instituteName, setInstituteName] = useState('');
+  const [isValidCode, setIsValidCode] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation(); // Get current URL
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
     const code = urlParams.get('code');
-    if (code) setFormData((prev) => ({ ...prev, instituteCode: code }));
 
-    // Fetch and set the institute name
-    axios
-      .get(`https://admission.met.edu/api/auth/institute-name/${code}`)
-      .then((response) => {
-        if (response.data?.institute?.programName) {
-          setInstituteName(response.data.institute.programName);
-        }
+    // Reset states to avoid stale data
+    setIsValidCode(true);
+    setInstituteName('');
+    setErrors({});
 
-        
-      })
-      .catch((error) => {
-        console.error('Error fetching institute name:', error);
-        setInstituteName('Unknown Institute');
-      });
-  }, []);
+    if (code) {
+      setFormData((prev) => ({ ...prev, instituteCode: code }));
+      setIsLoading(true);
+      axios
+        .get(`https://admission.met.edu/api/auth/institute-name/${code}`)
+        .then((response) => {
+          if (response.data?.institute?.programName) {
+            setInstituteName(response.data.institute.programName);
+            setIsValidCode(true);
+          } else {
+            setIsValidCode(false);
+            setInstituteName('');
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching institute name:', error);
+          setIsValidCode(false);
+          setInstituteName('');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsValidCode(false);
+      setFormData((prev) => ({ ...prev, instituteCode: '' }));
+    }
+  }, [location.search]); // Re-run when URL search params change
 
   useEffect(() => {
     let timer;
@@ -71,7 +97,6 @@ const RegistrationForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: name === 'email' ? value.trim() : value }));
@@ -92,8 +117,6 @@ const RegistrationForm = () => {
         ...formData,
         code: formData.instituteCode,
       });
-      console.log('Registration response:', response.data);
-      
       setInstituteId(response.data.instituteId);
       setIsOtpSent(true);
       setResendTimer(30);
@@ -153,13 +176,73 @@ const RegistrationForm = () => {
     }
   };
 
+  // Render error message with clickable program cards if institute code is invalid or missing
+  if (!isValidCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg text-center">
+          <div className="flex justify-center mb-6">
+            <img
+              src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
+              alt="Logo"
+              className="h-[5rem] w-auto"
+            />
+          </div>
+          <h2 className="text-2xl font-bold mb-4 text-red-600">Invalid URL</h2>
+          <p className="text-gray-600 mb-4">
+            Please select a program to register for:
+          </p>
+          <div className="flex flex-wrap justify-center mb-4">
+            {Object.entries(instituteMap).map(([code, program]) => (
+              <div
+                key={code}
+                className="w-full md:w-1/2 xl:w-1/2 p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-md"
+              >
+                <h3 className="text-md font-bold text-gray-900 mb-2">{program}</h3>
+                <p className="text-gray-600">
+                  <Link
+                    to={`/register?code=${code}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Register Now
+                  </Link>
+                </p>
+              </div>
+            ))}
+          </div>
+          <Link to="/login" className="text-blue-600 hover:underline">
+            Already have an account? Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Render loading state while fetching institute name
+  if (isLoading && !instituteName) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <p className="text-lg font-semibold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render registration form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg">
         <div className="flex justify-center mb-6">
-          <img src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png" alt="Logo" className="h-[5rem] w-auto" />
+          <img
+            src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
+            alt="Logo"
+            className="h-[5rem] w-auto"
+          />
         </div>
-        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">Admissions Application for  { InstituteName || '....' }</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">
+          Admissions Application for {instituteName || '....'}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <input
@@ -237,7 +320,9 @@ const RegistrationForm = () => {
           {!isOtpSent && (
             <button
               onClick={handleSendOtp}
-              className={`w-full md:w-auto px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${formData.instituteCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
+              className={`w-full md:w-auto px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${
+                formData.instituteCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+              }`}
               disabled={!formData.instituteCode || isLoading}
             >
               {isLoading ? 'Sending...' : 'Send OTP'}
@@ -247,14 +332,18 @@ const RegistrationForm = () => {
             <div className="flex gap-4 w-full md:w-auto">
               <button
                 onClick={handleVerifyOtp}
-                className={`px-6 py-3 rounded-lg text-white font-semibold ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                className={`px-6 py-3 rounded-lg text-white font-semibold ${
+                  isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                }`}
                 disabled={isLoading}
               >
                 {isLoading ? 'Verifying...' : 'Verify OTP'}
               </button>
               <button
                 onClick={handleResendOtp}
-                className={`px-6 py-3 rounded-lg text-white font-semibold ${resendTimer > 0 || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`px-6 py-3 rounded-lg text-white font-semibold ${
+                  resendTimer > 0 || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
                 disabled={resendTimer > 0 || isLoading}
               >
                 {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
