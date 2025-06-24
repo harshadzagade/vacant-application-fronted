@@ -7,7 +7,6 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
   const lastSyncedValues = useRef(null);
   const [internalErrors, setInternalErrors] = useState({});
 
-
   useEffect(() => {
     if (!initialData) return;
 
@@ -43,7 +42,6 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
     const newSelectedExams = exams.filter(
       (exam) =>
         initialData[`${exam}ApplicationId`] ||
-        // initialData[`${exam}Score`] ||
         initialData[`${exam}ScorePercent`]
     );
 
@@ -56,9 +54,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       lastSyncedValues.current = newFormValues;
     }
   }, [initialData, onUpdate]);
-  // Removed formValues and selectedExams from dependencies
 
-  // Sync formValues with parent on every change
   useEffect(() => {
     if (JSON.stringify(formValues) !== JSON.stringify(lastSyncedValues.current)) {
       onUpdate(formValues);
@@ -69,16 +65,12 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
   const handleChange = (e) => {
     const { name, value } = e.target;
     let error = '';
-    let normalizedValue = value;
 
     if (name.includes('ScorePercent') || name === 'percentile') {
       const val = parseFloat(value);
-      // Round to 2 decimal places valid
-      const roundedValue = value ? Number(parseFloat(val).toFixed(2)) : '';
-      if (isNaN(val) || val < 0 || val > 100) {
+      if (value && (isNaN(val) || val < 0 || val > 100)) {
         error = 'Percentile must be 0-100';
       }
-      normalizedValue = roundedValue;
     } else if (name === 'neetScore') {
       const val = parseFloat(value);
       if (!isNaN(val) && val < 0) {
@@ -86,13 +78,37 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
       }
     }
 
-    const updatedValues = { ...formValues, [name]: normalizedValue };
+    const updatedValues = { ...formValues, [name]: value };
     const updatedErrors = { ...internalErrors, [name]: error };
 
     setFormValues(updatedValues);
     setInternalErrors(updatedErrors);
 
     onUpdate({ values: updatedValues, errors: updatedErrors });
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name.includes('ScorePercent') || name === 'percentile') {
+      if (value !== '') {
+        const val = parseFloat(value);
+        if (!isNaN(val)) {
+          const formattedValue = Number(parseFloat(val).toFixed(2));
+          setFormValues((prev) => ({
+            ...prev,
+            [name]: formattedValue,
+          }));
+          setInternalErrors((prev) => ({
+            ...prev,
+            [name]: val < 0 || val > 100 ? 'Percentile must be 0-100' : '',
+          }));
+          onUpdate({
+            values: { ...formValues, [name]: formattedValue },
+            errors: { ...internalErrors, [name]: val < 0 || val > 100 ? 'Percentile must be 0-100' : '' },
+          });
+        }
+      }
+    }
   };
 
   const handleExamToggle = (exam) => {
@@ -127,8 +143,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 name="cetApplicationId"
                 value={formValues.cetApplicationId}
                 onChange={handleChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter CET Application ID"
                 disabled={disabled}
               />
@@ -142,8 +159,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 value={formValues.cetScore}
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetScore ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScore ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter CET Score"
                 disabled={disabled}
               />
@@ -154,13 +172,15 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               <input
                 type="number"
                 name="cetScorePercent"
-                value={formValues.cetScorePercent !== '' ? Number(formValues.cetScorePercent).toFixed(2) : ''}
+                value={formValues.cetScorePercent}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 min="0"
                 max="100"
                 step="0.01"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetScorePercent ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScorePercent ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter CET Percentile"
                 disabled={disabled}
               />
@@ -174,8 +194,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 value={formValues.neetScore}
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.neetScore || internalErrors.neetScore ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.neetScore || internalErrors.neetScore ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter NEET Score (if applicable)"
                 disabled={disabled}
               />
@@ -218,8 +239,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                     name={`${exam}ApplicationId`}
                     value={formValues[`${exam}ApplicationId`]}
                     onChange={handleChange}
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[`${exam}ApplicationId`] ? 'border-red-500' : 'border-gray-600'
-                      }`}
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}ApplicationId`] ? 'border-red-500' : 'border-gray-600'
+                    }`}
                     placeholder={`Enter ${exam.toUpperCase()} Application ID`}
                     disabled={disabled}
                   />
@@ -233,8 +255,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                     value={formValues[`${exam}Score`]}
                     onChange={handleChange}
                     min="0"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[`${exam}Score`] ? 'border-red-500' : 'border-gray-600'
-                      }`}
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}Score`] ? 'border-red-500' : 'border-gray-600'
+                    }`}
                     placeholder={`Enter ${exam.toUpperCase()} Score`}
                     disabled={disabled}
                   />
@@ -245,13 +268,15 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                   <input
                     type="number"
                     name={`${exam}ScorePercent`}
-                    value={formValues[`${exam}ScorePercent`] !== '' ? Number(formValues[`${exam}ScorePercent`]).toFixed(2) : ''}
+                    value={formValues[`${exam}ScorePercent`]}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     min="0"
                     max="100"
                     step="0.01"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[`${exam}ScorePercent`] ? 'border-red-500' : 'border-gray-600'
-                      }`}
+                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors[`${exam}ScorePercent`] ? 'border-red-500' : 'border-gray-600'
+                    }`}
                     placeholder={`Enter ${exam.toUpperCase()} Percentile`}
                     disabled={disabled}
                   />
@@ -271,8 +296,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 name="cetApplicationId"
                 value={formValues.cetApplicationId}
                 onChange={handleChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetApplicationId ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter CET Application ID"
                 disabled={disabled}
               />
@@ -286,8 +312,9 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 value={formValues.cetScore}
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.cetScore ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.cetScore ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter CET Score"
                 disabled={disabled}
               />
@@ -298,13 +325,15 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               <input
                 type="number"
                 name="percentile"
-                value={formValues.percentile !== '' ? Number(formValues.percentile).toFixed(2) : ''}
+                value={formValues.percentile}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 min="0"
                 max="100"
                 step="0.01"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.percentile ? 'border-red-500' : 'border-gray-600'
-                  }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  errors.percentile ? 'border-red-500' : 'border-gray-600'
+                }`}
                 placeholder="Enter Percentile"
                 disabled={disabled}
               />
