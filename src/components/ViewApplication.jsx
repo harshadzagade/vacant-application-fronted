@@ -260,7 +260,7 @@ const ViewApplication = () => {
                         <table className="hidden print:table w-full border-collapse border border-gray-300">
                           <thead>
                             <tr className="bg-gray-200">
-                              <th className="border border-gray-300 p-1"></th>
+                              <td className="border border-gray-300 p-1 text-sm"> Application ID</td>
                               {exams.map((exam) => (
                                 <th key={exam} className="border border-gray-300 p-1 text-sm">
                                   {exam.toUpperCase()}

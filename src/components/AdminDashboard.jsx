@@ -470,6 +470,14 @@ const AdminDashboard = () => {
                             </thead>
                             <tbody>
                               <tr>
+                                <td className="border border-gray-300 p-1 text-sm"> Application ID</td>
+                                {exams.map((exam) => (
+                                  <td key={exam} className="border border-gray-300 p-1 text-sm">
+                                    {entrance[`${exam}ApplicationId`] || ''}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr>
                                 <td className="border border-gray-300 p-2">Score</td>
                                 {exams.map((exam) => (
                                   <td key={exam} className="border border-gray-300 p-2">
@@ -491,8 +499,9 @@ const AdminDashboard = () => {
                           <div className="print:hidden">
                             <table className="w-full border-collapse border border-gray-200">
                               <thead>
+
                                 <tr className="bg-gray-100">
-                                  <th className="border border-gray-200 p-4 text-left text-gray-800"></th>
+                                  <th className="border border-gray-200 p-4 text-left text-gray-800"> Application ID </th>
                                   {exams.map((exam) => (
                                     <th key={exam} className="border border-gray-200 p-4 text-left text-gray-800">
                                       {exam.toUpperCase()}
@@ -501,6 +510,14 @@ const AdminDashboard = () => {
                                 </tr>
                               </thead>
                               <tbody>
+                                <tr>
+                                  <td className="border border-gray-200 p-4 font-semibold text-gray-700"> Application ID</td>
+                                  {exams.map((exam) => (
+                                    <td key={exam} className="border border-gray-200 p-4">
+                                      {entrance[`${exam}ApplicationId`] || ''}
+                                    </td>
+                                  ))}
+                                </tr>
                                 <tr key="score" className="hover:bg-gray-50">
                                   <td className="border border-gray-200 p-4 font-semibold text-gray-700">Score</td>
                                   {exams.map((exam) => (
@@ -517,24 +534,6 @@ const AdminDashboard = () => {
                                     </td>
                                   ))}
                                 </tr>
-                                {(viewDetails.formType === 'METIPD' || viewDetails.formType === 'METIPP') && (
-                                  <>
-                                    <tr key="cet-pcb-marks" className="hover:bg-gray-50">
-                                      <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCB Marks</td>
-                                      <td className="border border-gray-200 p-4">{entrance.cetPcbMarks || 'N/A'}</td>
-                                      {exams.slice(1).map((exam) => (
-                                        <td key={exam} className="border border-gray-200 p-4">-</td>
-                                      ))}
-                                    </tr>
-                                    <tr key="cet-pcm-marks" className="hover:bg-gray-50">
-                                      <td className="border border-gray-200 p-4 font-semibold text-gray-700">CET-PCM Marks</td>
-                                      <td className="border border-gray-200 p-4">{entrance.cetPcmMarks || 'N/A'}</td>
-                                      {exams.slice(1).map((exam) => (
-                                        <td key={exam} className="border border-gray-200 p-4">-</td>
-                                      ))}
-                                    </tr>
-                                  </>
-                                )}
                               </tbody>
                             </table>
                             {exams.every(
