@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 const EducationQualification = ({ formType, onUpdate, errors, initialData, disabled }) => {
   const [graduationStatus, setGraduationStatus] = useState('');
   const [formValues, setFormValues] = useState({
-    ssc: { board: '', college: '', stream: '', marks: '', percent: '', year: '' },
     hsc: { board: '', college: '', stream: '', marks: '', percent: '', year: '', pcmMarks: '', pcbMarks: '', englishMarks: '' },
     graduation: { board: '', college: '', stream: '', marks: '', percent: '', year: '', status: '', graduationStatus: '' },
   });
@@ -16,14 +15,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
     if (!initialData || isFormModified.current) return;
 
     const newFormValues = {
-      ssc: {
-        board: initialData.ssc?.board || '',
-        college: initialData.ssc?.college || '',
-        stream: initialData.ssc?.stream || '',
-        marks: initialData.ssc?.marks || '',
-        percent: initialData.ssc?.percent || '',
-        year: initialData.ssc?.year || '',
-      },
       hsc: {
         board: initialData.hsc?.board || '',
         college: initialData.hsc?.college || '',
