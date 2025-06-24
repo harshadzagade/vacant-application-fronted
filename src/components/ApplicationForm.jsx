@@ -520,7 +520,17 @@ const ApplicationForm = () => {
     const formDataToSend = new FormData();
     formDataToSend.append('formType', formType);
     formDataToSend.append('personal', JSON.stringify(formData.personal));
-    formDataToSend.append('entrance', JSON.stringify(formData.entrance || {}));
+
+    // Normalize entrance data
+    const normalizedEntrance = Object.keys(formData.entrance).reduce((acc, key) => {
+      if (key.includes('ScorePercent') || key === 'percentile') {
+        acc[key] = formData.entrance[key] !== '' ? Number(parseFloat(formData.entrance[key]).toFixed(2)) : '';
+      } else {
+        acc[key] = formData.entrance[key];
+      }
+      return acc;
+    }, {});
+    formDataToSend.append('entrance', JSON.stringify(normalizedEntrance));
     formDataToSend.append('education', JSON.stringify(formData.education));
     Object.entries(formData.documents).forEach(([key, value]) => {
       if (value && typeof value !== 'string') formDataToSend.append(key, value);

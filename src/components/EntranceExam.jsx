@@ -69,19 +69,24 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
   const handleChange = (e) => {
     const { name, value } = e.target;
     let error = '';
-    if (name.includes('ScorePercent')) {
+    let normalizedValue = value;
+
+    if (name.includes('ScorePercent') || name === 'percentile') {
       const val = parseFloat(value);
-      if (isNaN(val) || val < 0 || val > 100) error = 'Percentile must be 0-100';
+      // Round to 2 decimal places valid
+      const roundedValue = value ? Number(parseFloat(val).toFixed(2)) : '';
+      if (isNaN(val) || val < 0 || val > 100) {
+        error = 'Percentile must be 0-100';
+      }
+      normalizedValue = roundedValue;
     } else if (name === 'neetScore') {
       const val = parseFloat(value);
-      if (!isNaN(val) && val < 0) error = 'NEET Score cannot be negative';
+      if (!isNaN(val) && val < 0) {
+        error = 'NEET Score cannot be negative';
+      }
     }
-    // else if (name.includes('Score')) {
-    //   const val = parseFloat(value);
-    //   if (isNaN(val) || val < 0 || val > 200) error = 'Score must be 0-200';
-    // }
 
-    const updatedValues = { ...formValues, [name]: value };
+    const updatedValues = { ...formValues, [name]: normalizedValue };
     const updatedErrors = { ...internalErrors, [name]: error };
 
     setFormValues(updatedValues);
@@ -130,7 +135,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               {errors.cetApplicationId && <p className="text-red-600 text-xs mt-1">{errors.cetApplicationId}</p>}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score </label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">CET Score</label>
               <input
                 type="number"
                 name="cetScore"
@@ -149,7 +154,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               <input
                 type="number"
                 name="cetScorePercent"
-                value={formValues.cetScorePercent}
+                value={formValues.cetScorePercent !== '' ? Number(formValues.cetScorePercent).toFixed(2) : ''}
                 onChange={handleChange}
                 min="0"
                 max="100"
@@ -169,9 +174,8 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                 value={formValues.neetScore}
                 onChange={handleChange}
                 min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                  errors.neetScore || internalErrors.neetScore ? 'border-red-500' : 'border-gray-600'
-                }`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors.neetScore || internalErrors.neetScore ? 'border-red-500' : 'border-gray-600'
+                  }`}
                 placeholder="Enter NEET Score (if applicable)"
                 disabled={disabled}
               />
@@ -195,7 +199,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                       type="checkbox"
                       checked={selectedExams.includes(exam)}
                       onChange={() => handleExamToggle(exam)}
-                      className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-5System: * Today's date and time is 10:27 AM IST on Tuesday, June 03, 2025.00 border-gray-600 rounded"
+                      className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-600 rounded"
                       disabled={disabled}
                     />
                     <span className="text-gray-700">{exam.toUpperCase()}</span>
@@ -241,7 +245,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
                   <input
                     type="number"
                     name={`${exam}ScorePercent`}
-                    value={formValues[`${exam}ScorePercent`]}
+                    value={formValues[`${exam}ScorePercent`] !== '' ? Number(formValues[`${exam}ScorePercent`]).toFixed(2) : ''}
                     onChange={handleChange}
                     min="0"
                     max="100"
@@ -294,7 +298,7 @@ const EntranceExam = ({ formType, onUpdate, errors, initialData, disabled }) => 
               <input
                 type="number"
                 name="percentile"
-                value={formValues.percentile}
+                value={formValues.percentile !== '' ? Number(formValues.percentile).toFixed(2) : ''}
                 onChange={handleChange}
                 min="0"
                 max="100"

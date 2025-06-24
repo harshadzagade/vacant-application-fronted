@@ -10,9 +10,10 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const lastSyncedValues = useRef(null);
+  const isFormModified = useRef(false);
 
   useEffect(() => {
-    if (!initialData) return;
+    if (!initialData || isFormModified.current) return;
 
     const newFormValues = {
       ssc: {
@@ -41,22 +42,39 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
         marks: initialData.graduation?.marks || '',
         percent: initialData.graduation?.percent || '',
         year: initialData.graduation?.year || '',
-        graduationStatus: initialData.graduation?.graduationStatus || '',
+        graduationStatus: initialData.graduation?.graduationStatus || 'appearing', // Initialize from initialData
       },
     };
 
-
-
-    const newGraduationStatus = initialData.graduation?.marks || initialData.graduation?.percent ? 'appeared' : 'appearing';
-
     setFormValues(newFormValues);
-    setGraduationStatus(newGraduationStatus);
+    setGraduationStatus(initialData.graduation?.graduationStatus || 'appearing'); // Set initial status
 
     if (JSON.stringify(newFormValues) !== JSON.stringify(lastSyncedValues.current)) {
       onUpdate(newFormValues);
       lastSyncedValues.current = newFormValues;
     }
   }, [initialData]);
+
+  const handleGraduationStatusChange = (e) => {
+    const newStatus = e.target.value;
+    setGraduationStatus(newStatus);
+
+    setFormValues((prev) => {
+      const updatedValues = {
+        ...prev,
+        graduation: {
+          ...prev.graduation,
+          graduationStatus: newStatus, // Update status in formValues
+          ...(newStatus === 'appearing' ? { marks: '', percent: '' } : {}),
+        },
+      };
+      if (JSON.stringify(updatedValues) !== JSON.stringify(lastSyncedValues.current)) {
+        onUpdate({ values: updatedValues, errors: fieldErrors });
+        lastSyncedValues.current = updatedValues;
+      }
+      return updatedValues;
+    });
+  };
 
   const validateField = (level, field, value) => {
     const key = `${level}.${field}`;
@@ -125,22 +143,6 @@ const EducationQualification = ({ formType, onUpdate, errors, initialData, disab
 
   };
 
-  const handleGraduationStatusChange = (e) => {
-    const newStatus = e.target.value;
-    setGraduationStatus(newStatus);
-
-    if (newStatus === 'appearing') {
-      setFormValues((prev) => {
-        const updatedValues = {
-          ...prev,
-          graduation: { ...prev.graduation, marks: '', percent: '' },
-        };
-        onUpdate({ values: updatedValues, errors: fieldErrors });
-        lastSyncedValues.current = updatedValues;
-        return updatedValues;
-      });
-    }
-  };
 
   const renderFields = (level) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
