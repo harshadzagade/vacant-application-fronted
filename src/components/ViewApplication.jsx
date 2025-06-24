@@ -447,7 +447,7 @@ const ViewApplication = () => {
                                 <td className="border border-gray-300 p-1 text-sm">{education[level].stream || 'N/A'}</td>
                                 <td className="border border-gray-300 p-1 text-sm">{education[level].year || 'N/A'}</td>
                                 <td className="border border-gray-300 p-1 text-sm">{education[level].board || 'N/A'}</td>
-                                <td className="border border-gray-300 p-1 text-sm">{education[level].school || 'N/A'}</td>
+                                <td className="border border-gray-300 p-1 text-sm">{education[level].college || 'N/A'}</td>
                               </tr>
                             )
                           ))}
@@ -476,7 +476,7 @@ const ViewApplication = () => {
                                       {level.toUpperCase()}
                                     </td>
                                     <td className="border border-gray-200 p-4">{education[level].board || 'N/A'}</td>
-                                    <td className="border border-gray-200 p-4">{education[level].school || 'N/A'}</td>
+                                    <td className="border border-gray-200 p-4">{education[level].college || 'N/A'}</td>
                                     <td className="border border-gray-200 p-4">{education[level].stream || 'N/A'}</td>
                                     <td className="border border-gray-200 p-4">{education[level].marks || 'N/A'}</td>
                                     <td className="border border-gray-200 p-4">{education[level].percent || 'N/A'}</td>

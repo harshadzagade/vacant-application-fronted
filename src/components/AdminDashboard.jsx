@@ -170,7 +170,7 @@ const AdminDashboard = () => {
         if (app.education) {
           Object.entries(app.education).forEach(([key, value]) => {
             educationFields[`Education_${key.toUpperCase()}_Board`] = value.board || 'N/A';
-            educationFields[`Education_${key.toUpperCase()}_School`] = value.school || 'N/A';
+            educationFields[`Education_${key.toUpperCase()}_College`] = value.college || 'N/A';
             educationFields[`Education_${key.toUpperCase()}_Stream`] = value.stream || 'N/A';
             educationFields[`Education_${key.toUpperCase()}_Marks`] = value.marks || 'N/A';
             educationFields[`Education_${key.toUpperCase()}_Percent`] = value.percent || 'N/A';
@@ -621,7 +621,7 @@ const AdminDashboard = () => {
                                     <td className="border border-gray-300 p-2">{education[level].stream || 'N/A'}</td>
                                     <td className="border border-gray-300 p-2">{education[level].year || 'N/A'}</td>
                                     <td className="border border-gray-300 p-2">{education[level].board || 'N/A'}</td>
-                                    <td className="border border-gray-300 p-2">{education[level].school || 'N/A'}</td>
+                                    <td className="border border-gray-300 p-2">{education[level].college || 'N/A'}</td>
                                   </tr>
                                 )
                               ))}
@@ -647,7 +647,7 @@ const AdminDashboard = () => {
                                       <tr key={level} className="hover:bg-gray-50">
                                         <td className="border border-gray-200 p-4 font-semibold text-gray-700">{level.toUpperCase()}</td>
                                         <td className="border border-gray-200 p-4">{education[level].board || 'N/A'}</td>
-                                        <td className="border border-gray-200 p-4">{education[level].school || 'N/A'}</td>
+                                        <td className="border border-gray-200 p-4">{education[level].college || 'N/A'}</td>
                                         <td className="border border-gray-200 p-4">{education[level].stream || 'N/A'}</td>
                                         <td className="border border-gray-200 p-4">{education[level].marks || 'N/A'}</td>
                                         <td className="border border-gray-200 p-4">{education[level].percent || 'N/A'}</td>
