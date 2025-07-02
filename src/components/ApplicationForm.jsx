@@ -478,6 +478,35 @@ const ApplicationForm = () => {
     return Object.keys(mergedErrors).every((key) => !mergedErrors[key]);
   };
 
+  const refetchApplicationDetails = async () => {
+    const token = localStorage.getItem('token');
+    if (!token || !applicationId) return;
+
+    try {
+      const response = await fetch(`https://admission.met.edu/api/application/details/${applicationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setFormData({
+          personal: {
+            ...data.application.personal,
+            studentName: `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim(),
+            mobileNo: userData.phoneNo || '',
+            email: userData.email || '',
+          },
+          entrance: data.application.entrance || {},
+          education: data.application.education || {},
+          documents: data.application.documents || {},
+        });
+      }
+    } catch (err) {
+      console.error("Error reloading application details:", err);
+    }
+  };
+
+
   const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
 
@@ -543,6 +572,7 @@ const ApplicationForm = () => {
 
       if (data.success) {
         const newApplicationId = data.application?.applicationId || data.applicationId || data.id;
+        await refetchApplicationDetails();
         if (!newApplicationId && !applicationId) {
           const appResponse = await fetch('https://admission.met.edu/api/application', {
             headers: { 'Authorization': `Bearer ${token}` },

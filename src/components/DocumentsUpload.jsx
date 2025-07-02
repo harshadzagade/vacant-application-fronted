@@ -132,7 +132,7 @@ const DocumentsUpload = ({ formType, onUpdate, errors, initialData, disabled, is
       { key: 'cetScoreCard', label: 'CET Score Card', accept: 'application/pdf,image/jpeg,image/png', required: ['METICS', 'METIPD', 'METIOM'].includes(formType) },
       {
         key: 'fcReceipt',
-        label: 'FC Receipt',
+        label: 'Scrutiny Center Acknowledgement',
         accept: 'application/pdf,image/jpeg,image/png',
         required: isFinalSubmission && ['METICS', 'METIPD', 'METIOM', 'METIPP'].includes(formType),
         shouldRender: ['METICS', 'METIPD', 'METIOM', 'METIPP'].includes(formType) && !!applicationId,
