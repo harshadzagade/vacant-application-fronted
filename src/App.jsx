@@ -6,6 +6,8 @@ import SubmissionConfirmation from './components/SubmissionConfirmation';
 import ViewApplication from './components/ViewApplication';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
+import ImportStatus from './components/ImportStatus';
+import UserApplicationStatus from './components/UserApplicationStatus';
 
 // ProtectedRoute component to guard /application
 const ProtectedRoute = ({ children }) => {
@@ -48,6 +50,8 @@ function App() {
             <Route path="/" element={<Navigate to="/register" />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/import-status" element={<ImportStatus />} />
+            <Route path="/admin/user-status" element={<UserApplicationStatus />} />
           </Routes>
         </div>
       </div>
