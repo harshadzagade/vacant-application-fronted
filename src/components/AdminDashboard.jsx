@@ -260,41 +260,72 @@ const AdminDashboard = () => {
   const handleSelect = id => setSelectedApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
 
-  const deleteSelectedApplications = async () => {
+  const handleBulkActivate = async () => {
     if (!selectedApps.length) {
-      Swal.fire({ icon: 'warning', title: 'No Selection', text: 'Select applications to delete.' });
+      Swal.fire({ icon: 'warning', title: 'No Selection', text: 'Please select applications.' });
       return;
     }
 
     const confirm = await Swal.fire({
-      icon: 'warning',
-      title: 'Confirm Deletion',
-      text: `Are you sure you want to delete ${selectedApps.length} application(s)?`,
+      icon: 'question',
+      title: 'Confirm Activation',
+      text: `Activate ${selectedApps.length} applications?`,
       showCancelButton: true,
-      confirmButtonText: 'Yes, delete',
+      confirmButtonText: 'Yes, activate',
     });
 
     if (!confirm.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.delete('https://admission.met.edu/api/admin/applications/bulk-delete', {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { applicationIds: selectedApps },
-      });
+      const res = await axios.put(
+        'https://admission.met.edu/api/admin/applications/bulk-active',
+        { applicationIds: selectedApps },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (res.data.success) {
-        setApplications(prev => prev.filter(app => !selectedApps.includes(app.applicationId)));
+        Swal.fire({ icon: 'success', title: 'Activated', text: 'Applications activated.' });
         setSelectedApps([]);
-        Swal.fire({ icon: 'success', title: 'Deleted', text: 'Applications deleted successfully.' });
-      } else {
-        throw new Error(res.data.message || 'Deletion failed');
-      }
+        // Optionally reload data
+      } else throw new Error(res.data.message || 'Activation failed');
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'Error', text: error.message });
     }
   };
 
+  const handleBulkInactivate = async () => {
+    if (!selectedApps.length) {
+      Swal.fire({ icon: 'warning', title: 'No Selection', text: 'Please select applications.' });
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm Inactivation',
+      text: `Inactivate ${selectedApps.length} applications?`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, inactivate',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        'https://admission.met.edu/api/admin/applications/bulk-inactive',
+        { applicationIds: selectedApps },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        Swal.fire({ icon: 'success', title: 'Inactivated', text: 'Applications inactivated.' });
+        setSelectedApps([]);
+      } else throw new Error(res.data.message || 'Inactivation failed');
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  };
 
   const handlePrint = () => window.print();
 
@@ -321,8 +352,21 @@ const AdminDashboard = () => {
                 <div className="flex justify-between items-center mb-4">
                   {/* <h2 className="text-2xl font-semibold">Applications</h2> */}
                   <button onClick={exportToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export Selected to Excel</button>
-                  <button onClick={deleteSelectedApplications} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  {/* <button onClick={deleteSelectedApplications} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                     Delete Selected
+                  </button> */}
+                  <button
+                    onClick={handleBulkActivate}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Mark Selected Active
+                  </button>
+
+                  <button
+                    onClick={handleBulkInactivate}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                  >
+                    Mark Selected Inactive
                   </button>
 
                 </div>
@@ -390,6 +434,7 @@ const AdminDashboard = () => {
                       <th className="border p-3 py-2 text-left">Program</th>
                       <th className="border p-3 py-2 text-left">Status</th>
                       <th className="border p-3 py-2 text-left">Actions</th>
+                      <th className="border p-3 py-2 text-left">Active Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -404,6 +449,13 @@ const AdminDashboard = () => {
                         <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
                         <td className="border p-3 py-2"><select value={app.status} onChange={e => changeStatus(app.applicationId, e.target.value)} className="border rounded p-1"><option value={app.status}>{app.status}</option><option value="draft">Draft</option></select></td>
                         <td className="border p-3 py-2"><button onClick={() => openDetails(app.applicationId)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">View Details</button></td>
+                        <td className="border p-3 py-2">
+                          {(app.active == 1 || app.active === true) ? (
+                            <span className="text-green-600 font-semibold">✅ Active</span>
+                          ) : (
+                            <span className="text-red-500 font-semibold">❌ Inactive</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

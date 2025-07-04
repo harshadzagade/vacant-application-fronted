@@ -8,6 +8,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
 import ImportStatus from './components/ImportStatus';
 import UserApplicationStatus from './components/UserApplicationStatus';
+import AuditLogViewer from './components/AuditLogViewer';
 
 // ProtectedRoute component to guard /application
 const ProtectedRoute = ({ children }) => {
@@ -52,6 +53,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/import-status" element={<ImportStatus />} />
             <Route path="/admin/user-status" element={<UserApplicationStatus />} />
+            <Route path="/admin/audit-logs" element={<AuditLogViewer />} />
           </Routes>
         </div>
       </div>
