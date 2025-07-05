@@ -28,6 +28,10 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'applicationNo', direction: 'asc' });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+
 
 
   const navigate = useNavigate();
@@ -116,6 +120,7 @@ const AdminDashboard = () => {
     }
 
     setApplications(filtered);
+    setCurrentPage(1);
   };
 
 
@@ -438,28 +443,85 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {applications.map(app => (
+                    {applications
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map(app => (
 
-                      <tr key={app.applicationId} className="hover:bg-gray-50">
-                        <td className="border p-3 py-2"><input type="checkbox" checked={selectedApps.includes(app.applicationId)} onChange={() => handleSelect(app.applicationId)} /></td>
-                        <td className="border p-3 py-2">{app.applicationNo}</td>
-                        <td className="border p-3 py-2">
-                          {app.user ? `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName || ''}`.trim() : 'N/A'}
-                        </td>
-                        <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
-                        <td className="border p-3 py-2"><select value={app.status} onChange={e => changeStatus(app.applicationId, e.target.value)} className="border rounded p-1"><option value={app.status}>{app.status}</option><option value="draft">Draft</option></select></td>
-                        <td className="border p-3 py-2"><button onClick={() => openDetails(app.applicationId)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">View Details</button></td>
-                        <td className="border p-3 py-2">
-                          {(app.active == 1 || app.active === true) ? (
-                            <span className="text-green-600 font-semibold">✅ Active</span>
-                          ) : (
-                            <span className="text-red-500 font-semibold">❌ Inactive</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                        <tr key={app.applicationId} className="hover:bg-gray-50">
+                          <td className="border p-3 py-2"><input type="checkbox" checked={selectedApps.includes(app.applicationId)} onChange={() => handleSelect(app.applicationId)} /></td>
+                          <td className="border p-3 py-2">{app.applicationNo}</td>
+                          <td className="border p-3 py-2">
+                            {app.user ? `${app.user.firstName} ${app.user.middleName || ''} ${app.user.lastName || ''}`.trim() : 'N/A'}
+                          </td>
+                          <td className="border p-3 py-2">{formTypeNames[app.formType] || 'Unknown'}</td>
+                          <td className="border p-3 py-2"><select value={app.status} onChange={e => changeStatus(app.applicationId, e.target.value)} className="border rounded p-1"><option value={app.status}>{app.status}</option><option value="draft">Draft</option></select></td>
+                          <td className="border p-3 py-2"><button onClick={() => openDetails(app.applicationId)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">View Details</button></td>
+                          <td className="border p-3 py-2">
+                            {(app.active == 1 || app.active === true) ? (
+                              <span className="text-green-600 font-semibold">✅ Active</span>
+                            ) : (
+                              <span className="text-red-500 font-semibold">❌ Inactive</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
+                <div className="mt-4 flex flex-col items-center gap-2 print:hidden">
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="itemsPerPage" className="text-sm font-medium text-gray-700">Items per page:</label>
+                    <select
+                      id="itemsPerPage"
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="border px-2 py-1 rounded text-sm"
+                    >
+                      {[5, 10, 20, 50, 100].map((num) => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center items-center gap-2 mt-2">
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      className="px-3 py-1 bg-gray-300 text-black rounded disabled:opacity-50"
+                      disabled={currentPage === 1}
+                    >
+                      Prev
+                    </button>
+
+                    {[...Array(Math.ceil(applications.length / itemsPerPage)).keys()].map((page) => (
+                      <button
+                        key={page + 1}
+                        onClick={() => setCurrentPage(page + 1)}
+                        className={`px-3 py-1 rounded ${currentPage === page + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                          }`}
+                      >
+                        {page + 1}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) =>
+                          Math.min(prev + 1, Math.ceil(applications.length / itemsPerPage))
+                        )
+                      }
+                      className="px-3 py-1 bg-gray-300 text-black rounded disabled:opacity-50"
+                      disabled={currentPage === Math.ceil(applications.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+
+                  <div className="text-sm text-gray-600 mt-1">
+                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, applications.length)} to {Math.min(currentPage * itemsPerPage, applications.length)} of {applications.length} applications
+                  </div>
+                </div>
               </div>
             </div>
 
