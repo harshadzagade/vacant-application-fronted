@@ -1,10 +1,10 @@
-// UserApplicationStatus.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import SidebarLayout from './SidebarLayout';
 
 const UserApplicationStatus = () => {
+  const [profile, setProfile] = useState(null);
   const [instituteId, setInstituteId] = useState('');
   const [institutes, setInstitutes] = useState([]);
   const [users, setUsers] = useState([]);
@@ -13,6 +13,27 @@ const UserApplicationStatus = () => {
   const [appExistsFilter, setAppExistsFilter] = useState('');
   const [sortAsc, setSortAsc] = useState(true);
 
+  // Fetch profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('https://admission.met.edu/api/admin/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.success) {
+          const staff = res.data.staff;
+          setProfile(staff);
+          setInstituteId(staff.institute?.instituteId || ''); // ✅ corrected here
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Fetch institutes for dropdown
   useEffect(() => {
     const fetchInstitutes = async () => {
       try {
@@ -28,11 +49,12 @@ const UserApplicationStatus = () => {
     fetchInstitutes();
   }, []);
 
-  const fetchUserStatus = async () => {
-    if (!instituteId) return;
+  // Fetch user status
+  const fetchUserStatus = async (instId) => {
+    if (!instId) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`https://admission.met.edu/api/admin/applications/users-application-status?instituteId=${instituteId}`, {
+      const res = await axios.get(`https://admission.met.edu/api/admin/applications/users-application-status?instituteId=${instId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) setUsers(res.data.users);
@@ -41,8 +63,9 @@ const UserApplicationStatus = () => {
     }
   };
 
+  // Auto-fetch on instituteId change
   useEffect(() => {
-    if (instituteId) fetchUserStatus();
+    if (instituteId) fetchUserStatus(instituteId);
   }, [instituteId]);
 
   const toggleSort = () => setSortAsc(prev => !prev);
@@ -70,14 +93,16 @@ const UserApplicationStatus = () => {
 
   return (
     <SidebarLayout>
-      <div className="p-6  mx-auto bg-white rounded shadow">
+      <div className="p-6 mx-auto bg-white rounded shadow">
         <h2 className="text-xl font-semibold mb-4">User Application Status</h2>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          {/* Institute dropdown shown to all, but disabled for admins */}
           <select
             className="border px-3 py-2 rounded w-full md:w-1/4"
             value={instituteId}
             onChange={(e) => setInstituteId(e.target.value)}
+            disabled={profile?.role !== 'superadmin'}
           >
             <option value="">-- Select Institute --</option>
             {institutes.map(inst => (
@@ -116,7 +141,7 @@ const UserApplicationStatus = () => {
           </select>
         </div>
 
-        <div className="mb-4  text-red-600 flex flex-wrap gap-4">
+        <div className="mb-4 text-red-600 flex flex-wrap gap-4">
           <p>Total: <strong>{total}</strong></p>
           <p>Submitted: <strong>{submitted}</strong></p>
           <p>Draft: <strong>{draft}</strong></p>
