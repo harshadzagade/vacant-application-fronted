@@ -41,6 +41,9 @@ const ApplicationForm = () => {
   const educationErrorsRef = useRef({});
   const entranceErrorsRef = useRef({});
 
+  const [submitting, setSubmitting] = useState(false);
+
+
   useEffect(() => {
     const fetchUserDataAndApplication = async () => {
       setIsLoading(true);
@@ -510,6 +513,9 @@ const ApplicationForm = () => {
   const handleSubmit = async (e, isFinal = false) => {
     e.preventDefault();
 
+    if (submitting) return;
+    setSubmitting(true);
+
     setIsFinalSubmissionAttempt(isFinal);  // Set flag for final submission attempt
 
     // 🔒 Trigger browser-based validation
@@ -573,6 +579,7 @@ const ApplicationForm = () => {
       if (data.success) {
         const newApplicationId = data.application?.applicationId || data.applicationId || data.id;
         await refetchApplicationDetails();
+
         if (!newApplicationId && !applicationId) {
           const appResponse = await fetch('https://admission.met.edu/api/application', {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -584,15 +591,25 @@ const ApplicationForm = () => {
           if (appData.success && appData.applications.length > 0) {
             const latestApplication = appData.applications[0];
             setApplicationId(latestApplication.applicationId);
-            Swal.fire({
-              icon: 'success',
-              title: isFinal ? 'Final Submission Successful' : 'Application Submitted',
-              text: isFinal
-                ? 'Your application has been successfully submitted.'
-                : `Application submitted successfully`,
-            });
             if (isFinal) {
-              navigate(`/submission-confirmation/${latestApplication.applicationId}`);
+              setTimeout(() => {
+                setSubmitting(false);
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Final Submission Successful',
+                  text: 'Your application has been successfully submitted.',
+                });
+                navigate(`/submission-confirmation/${latestApplication.applicationId}`);
+              }, 4000);
+            } else {
+              setTimeout(() => {
+                setSubmitting(false);
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Application Submitted',
+                  text: 'Your application has been submitted successfully.',
+                });
+              }, 4000);
             }
           } else {
             throw new Error('No applications found after submission');
@@ -600,25 +617,71 @@ const ApplicationForm = () => {
         } else {
           if (!applicationId) setApplicationId(newApplicationId);
           setIsFinalSubmitted(isFinal);
-          Swal.fire({
-            icon: 'success',
-            title: isFinal ? 'Final Submission Successful' : applicationId ? 'Application Updated' : 'Application Submitted',
-          });
+
           if (isFinal) {
-            navigate(`/submission-confirmation/${newApplicationId}`);
+            setTimeout(() => {
+              setSubmitting(false);
+              Swal.fire({
+                icon: 'success',
+                title: 'Final Submission Successful',
+                text: 'Your application has been successfully submitted.',
+              });
+              navigate(`/submission-confirmation/${newApplicationId}`);
+            }, 4000);
+          } else if (applicationId) {
+            setTimeout(() => {
+              setSubmitting(false);
+              Swal.fire({
+                icon: 'success',
+                title: 'Application Updated',
+                text: 'Your application has been updated successfully.',
+              });
+            }, 4000);
+          } else {
+            setTimeout(() => {
+              setSubmitting(false);
+              Swal.fire({
+                icon: 'success',
+                title: 'Application Submitted',
+                text: 'Your application has been submitted successfully.',
+              });
+            }, 4000);
           }
         }
-      } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to process application' });
+      }
+      else {
+        setTimeout(() => {
+          setSubmitting(false);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message || 'Failed to process application',
+          });
+        }, 4000);
       }
     } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Error', text: `Error: ${error.message}` });
-      console.error('Submission error:', error || error.message);
+      setTimeout(() => {
+        setSubmitting(false);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error: ${error.message}`,
+        });
+        console.error('Submission error:', error || error.message);
+      }, 4000);
+    } finally {
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 4000); // Reset spinner
     }
   };
 
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
+
+    if (submitting) return;
+
+
     const result = await Swal.fire({
       title: 'Confirm Final Submission',
       text: 'Once you confirm final submission, you will no longer be able to edit or make further changes to your application. Are you sure?',
@@ -696,133 +759,166 @@ const ApplicationForm = () => {
   };
 
   return (
-    <div className="bg-white shadow-2xl rounded-2xl p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-brand-900 border-b border-brand-200 pb-2">
-          Application Form - {formTypeNames[formType] || 'Loading...'}
-        </h2>
-        <div className="flex gap-2">
-          {isFinalSubmitted && (
+    <>
+      {submitting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <span className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
+            <p className="text-white mt-4 text-lg font-semibold">
+              {isFinalSubmissionAttempt
+                ? 'Final Submission in progress...'
+                : applicationId
+                  ? ''
+                  : ''}
+            </p>
+          </div>
+        </div>
+      )}
+      <div className="bg-white shadow-2xl rounded-2xl p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-brand-900 border-b border-brand-200 pb-2">
+            Application Form - {formTypeNames[formType] || 'Loading...'}
+          </h2>
+          <div className="flex gap-2">
+            {isFinalSubmitted && (
+              <button
+                onClick={() => navigate(`/view-application/${applicationId}`)}
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
+              >
+                View Application
+              </button>
+            )}
             <button
-              onClick={() => navigate(`/view-application/${applicationId}`)}
+              onClick={handleLogout}
               className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
             >
-              View Application
+              Logout
             </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition shadow-md hover:shadow-lg"
+          </div>
+        </div>
+        {submissionStatus && (
+          <div
+            className={`mb-6 p-4 rounded-lg ${submissionStatus.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
           >
-            Logout
-          </button>
-        </div>
-      </div>
-      {submissionStatus && (
-        <div
-          className={`mb-6 p-4 rounded-lg ${submissionStatus.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-        >
-          {submissionStatus.message}
-        </div>
-      )}
-      {isLoading ? (
-        <div>Loading application form...</div>
-      ) : formType ? (
-        <form ref={formRef} onSubmit={isFinalSubmitted ? null : handleSubmit} noValidate>
-          <PersonalDetails
-            formType={formType}
-            onUpdate={(data) => updateFormData('personal', data)}
-            errors={errors}
-            userData={userData}
-            initialData={personalData}
-            disabled={isFinalSubmitted}
-          />
-          <EntranceExam
-            formType={formType}
-            onUpdate={(data) => {
-              updateFormData('entrance', data.values);
-              entranceErrorsRef.current = data.errors; // ✅ capture internal errors
-            }}
-            errors={errors}
-            initialData={entranceData}
-            disabled={isFinalSubmitted}
-          />
-          <EducationQualification
-            formType={formType}
-            onUpdate={(data) => {
-              updateFormData('education', data.values);
-              educationErrorsRef.current = data.errors; // ✅ capture internal errors
-            }}
-            errors={errors}
-            initialData={educationData}
-            disabled={isFinalSubmitted}
-          />
-          <DocumentsUpload
-            formType={formType}
-            onUpdate={(data) => updateFormData('documents', data)}
-            errors={errors}
-            initialData={documentsData}
-            disabled={isFinalSubmitted}
-            isFinalSubmission={isFinalSubmissionAttempt}
-            applicationId={applicationId}
-          />
-          {!isFinalSubmitted && (
-            <div className="mt-8 flex justify-between">
-              {applicationId && (
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    checked={termsAgreed}
-                    onChange={(e) => setTermsAgreed(e.target.checked)}
-                    className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
-                  />
-                  <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
-                    I agree that the information I filled is correct and complete.
-                  </label>
-                </div>
-              )}
-              <div className="flex space-x-4">
+            {submissionStatus.message}
+          </div>
+        )}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <span className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></span>
+            <span className="ml-4 text-brand-700 font-semibold">Loading application form...</span>
+          </div>
+        ) : formType ? (
+          <form ref={formRef} onSubmit={isFinalSubmitted ? null : handleSubmit} noValidate>
+            <PersonalDetails
+              formType={formType}
+              onUpdate={(data) => updateFormData('personal', data)}
+              errors={errors}
+              userData={userData}
+              initialData={personalData}
+              disabled={isFinalSubmitted}
+            />
+            <EntranceExam
+              formType={formType}
+              onUpdate={(data) => {
+                updateFormData('entrance', data.values);
+                entranceErrorsRef.current = data.errors; // ✅ capture internal errors
+              }}
+              errors={errors}
+              initialData={entranceData}
+              disabled={isFinalSubmitted}
+            />
+            <EducationQualification
+              formType={formType}
+              onUpdate={(data) => {
+                updateFormData('education', data.values);
+                educationErrorsRef.current = data.errors; // ✅ capture internal errors
+              }}
+              errors={errors}
+              initialData={educationData}
+              disabled={isFinalSubmitted}
+            />
+            <DocumentsUpload
+              formType={formType}
+              onUpdate={(data) => updateFormData('documents', data)}
+              errors={errors}
+              initialData={documentsData}
+              disabled={isFinalSubmitted}
+              isFinalSubmission={isFinalSubmissionAttempt}
+              applicationId={applicationId}
+            />
+            {!isFinalSubmitted && (
+              <div className="mt-8 flex justify-between">
                 {applicationId && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      if (!termsAgreed) {
-                        Swal.fire({
-                          icon: 'warning',
-                          title: 'Please agree to the terms',
-                          text: 'You must agree to the terms before submitting the application.',
-                        });
-                      } else {
-                        handleFinalSubmit(e); // ✅ Pass the event
-                      }
-                    }}
-                    className="p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
-                    disabled={!termsAgreed}
-                  >
-                    Final Submit
-                  </button>
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAgreed}
+                      onChange={(e) => setTermsAgreed(e.target.checked)}
+                      className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-brand-200 rounded"
+                    />
+                    <label htmlFor="terms" className="ml-2 text-sm text-brand-700">
+                      I agree that the information I filled is correct and complete.
+                    </label>
+                  </div>
                 )}
-                <button
-                  type="submit"
-                  className="p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
-                  disabled={isFinalSubmitted}
-                >
-                  {applicationId ? 'Update Application' : 'Submit Application'}
-                </button>
+                <div className="flex space-x-4">
+                  {applicationId && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        if (!termsAgreed) {
+                          Swal.fire({
+                            icon: 'warning',
+                            title: 'Please agree to the terms',
+                            text: 'You must agree to the terms before submitting the application.',
+                          });
+                        } else {
+                          handleFinalSubmit(e);
+                        }
+                      }}
+                      className="p-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg flex items-center justify-center min-w-[180px]"
+                      disabled={!termsAgreed || submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></span>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Final Submit'
+                      )}
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="p-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg flex items-center justify-center min-w-[180px]"
+                    disabled={isFinalSubmitted || submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      applicationId ? 'Update Application' : 'Submit Application'
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-          {isFinalSubmitted && (
-            <div className="mt-8 p-4 bg-yellow-100 text-yellow-700 rounded-lg">
-              This application has been finally submitted and cannot be edited.
-            </div>
-          )}
-        </form>
-      ) : (
-        <div>No application form available</div>
-      )}
-    </div>
+            )}
+            {isFinalSubmitted && (
+              <div className="mt-8 p-4 bg-yellow-100 text-yellow-700 rounded-lg">
+                This application has been finally submitted and cannot be edited.
+              </div>
+            )}
+          </form>
+        ) : (
+          <div>No application form available</div>
+        )}
+      </div>
+    </>
   );
 };
 
