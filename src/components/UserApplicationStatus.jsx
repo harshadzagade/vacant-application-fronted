@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 import SidebarLayout from './SidebarLayout';
+
 
 const UserApplicationStatus = () => {
   const [profile, setProfile] = useState(null);
@@ -74,6 +76,48 @@ const UserApplicationStatus = () => {
     setAppExistsFilter('');
     setSearchTerm('');
   };
+
+  const exportToExcel = () => {
+    const exportData = filteredUsers.map(user => ({
+      'Full Name': `${user.firstName} ${user.lastName}`,
+      'Email Address': user.email,
+      'Phone Number': user.phoneNo,
+      'Username': user.username,
+      'Application No': user.applicationNo || '-',
+      'Application Exists': user.applicationExists ? 'Yes' : 'No',
+      'Status': user.status,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Set custom column widths (in number of characters)
+    const columnWidths = [
+      { wch: 25 }, // Full Name
+      { wch: 30 }, // Email Address
+      { wch: 15 }, // Phone Number
+      { wch: 20 }, // Username
+      { wch: 18 }, // Application No
+      { wch: 18 }, // Application Exists
+      { wch: 18 }, // Status
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Optional: Bold the header row (row 1)
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (!worksheet[cellAddress]) continue;
+      worksheet[cellAddress].s = {
+        font: { bold: true }
+      };
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'User Application Status');
+
+    XLSX.writeFile(workbook, 'User_Application_Status.xlsx');
+  };
+
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = [user.firstName, user.lastName, user.email, user.phoneNo, user.username].join(' ').toLowerCase().includes(searchTerm.toLowerCase());
@@ -149,6 +193,13 @@ const UserApplicationStatus = () => {
           <p>Not Created: <strong>{notCreated}</strong></p>
           <button className="ml-auto text-blue-600 underline" onClick={clearFilters}>Clear Filters</button>
         </div>
+
+        <button
+          onClick={exportToExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Export to Excel
+        </button>
 
         <div className="overflow-x-auto">
           <table className="min-w-full border">
