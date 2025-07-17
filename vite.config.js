@@ -1,23 +1,18 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['admission.met.edu'],
-    port:5173,
-    open: true,
+    host: '0.0.0.0',
+    port: 5177,
+    allowedHosts: ['admission.met.edu'], // ✅ Add this line
     proxy: {
       '/api': {
         target: 'https://admission.met.edu/',
         changeOrigin: true,
+        secure: false,
       },
     },
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
   },
 });

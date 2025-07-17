@@ -241,7 +241,13 @@ const RegistrationForm = () => {
           />
         </div>
         <h2 className="text-3xl font-bold mb-6 text-center text-red-600">
-          Admissions Application for {instituteName || '....'}
+          Admissions Application for {
+            instituteName === 'BPHA' ? 'Pharmacy Degree' :
+              instituteName === 'DPHA' ? 'Pharmacy Diploma' :
+                instituteName === 'MMS' ? 'MMS' :
+                  instituteName === 'MCA' ? 'MCA' :
+                    instituteName || '....'
+          }
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -320,9 +326,8 @@ const RegistrationForm = () => {
           {!isOtpSent && (
             <button
               onClick={handleSendOtp}
-              className={`w-full md:w-auto px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${
-                formData.instituteCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
+              className={`w-full md:w-auto px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center ${formData.instituteCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+                }`}
               disabled={!formData.instituteCode || isLoading}
             >
               {isLoading ? 'Sending...' : 'Send OTP'}
@@ -332,18 +337,16 @@ const RegistrationForm = () => {
             <div className="flex gap-4 w-full md:w-auto">
               <button
                 onClick={handleVerifyOtp}
-                className={`px-6 py-3 rounded-lg text-white font-semibold ${
-                  isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-                }`}
+                className={`px-6 py-3 rounded-lg text-white font-semibold ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                  }`}
                 disabled={isLoading}
               >
                 {isLoading ? 'Verifying...' : 'Verify OTP'}
               </button>
               <button
                 onClick={handleResendOtp}
-                className={`px-6 py-3 rounded-lg text-white font-semibold ${
-                  resendTimer > 0 || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className={`px-6 py-3 rounded-lg text-white font-semibold ${resendTimer > 0 || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 disabled={resendTimer > 0 || isLoading}
               >
                 {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
