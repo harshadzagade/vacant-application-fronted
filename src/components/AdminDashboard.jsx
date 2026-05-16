@@ -385,7 +385,7 @@ const AdminDashboard = () => {
                     className="border px-3 py-2 rounded"
                   >
                     <option value="">All Years</option>
-                    {[2025, 2024, 2023].map(year => (
+                    {[2030, 2029, 2028, 2027, 2026,2025, 2024, 2023].map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
                   </select>
@@ -527,16 +527,16 @@ const AdminDashboard = () => {
 
             {/* Application Details Modal */}
             {viewDetails && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:bg-white print:inset-auto print:flex-col">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:static print:inset-auto print:bg-white print:block print:overflow-visible">
                 {/* Print-only header */}
                 <div className="hidden print:block border-b border-gray-300 pb-4 w-full text-center">
                   <div className="flex flex-col items-center justify-center mb-2 print:text-[#E31E24]">
                     <h1 className="text-2xl font-bold">{viewDetails?.institute?.name || 'MET Institute'}</h1>
                   </div>
                   <h2 className="text-xl font-semibold mb-2">Application Form for {viewDetails?.institute?.name || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
-                  <p className="text-sm">Academic Year: 2025-2026</p>
+                  <p className="text-sm">Academic Year: 2026-2027</p>
                 </div>
-                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none">
+                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none print:overflow-visible print:h-auto">
                   <div className="flex justify-between items-center mb-6 print:hidden">
                     <h3 className="text-2xl font-semibold text-gray-800">Application Details</h3>
                     <div className="flex gap-3">
@@ -941,14 +941,39 @@ const AdminDashboard = () => {
                       body, html {
                         margin: 0 !important;
                         padding: 0 !important;
-                        background: white;
+                        background: white !important;
                         font-size: 10pt !important;
-                        width: 100%;
+                        width: 100% !important;
                       }
 
                       @page {
                         size: auto;
                         margin: 0.6in 0.5in;
+                      }
+
+                      /* Overlay aur modal ko static aur scroll free bana do */
+                      .print\\:static {
+                        position: static !important;
+                      }
+                      .print\\:inset-auto {
+                        inset: auto !important;
+                      }
+                      .print\\:overflow-visible {
+                        overflow: visible !important;
+                      }
+                      .print\\:max-h-none {
+                        max-height: none !important;
+                      }
+                      .print\\:h-auto {
+                        height: auto !important;
+                      }
+
+                      /* Tailwind classes jo clip kar rahi hain unko override karo */
+                      .max-h-\\[80vh\\] {
+                        max-height: none !important;
+                      }
+                      .overflow-y-auto {
+                        overflow: visible !important;
                       }
 
                       .min-h-screen, .print\\:min-h-0 {
@@ -973,7 +998,7 @@ const AdminDashboard = () => {
 
                       .print\\:max-w-none,
                       .max-w-4xl,
-                      .max-w-[80%] {
+                      .max-w-\\[80%\\] {
                         max-width: 100% !important;
                         width: 100% !important;
                       }
@@ -1005,9 +1030,6 @@ const AdminDashboard = () => {
                         page-break-after: avoid;
                       }
 
-                      .text-gray-800, .text-gray-700, .text-gray-600 {
-                        color: #000 !important;
-                      }
 
                       svg {
                         display: none !important;
@@ -1041,9 +1063,11 @@ const AdminDashboard = () => {
                         break-before: avoid;
                         page-break-before: avoid;
                       }
+                        
                     }
-                `}
+                  `}
                 </style>
+
 
               </div>
             )}

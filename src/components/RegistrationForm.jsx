@@ -37,6 +37,13 @@ const RegistrationForm = () => {
     const urlParams = new URLSearchParams(location.search);
     const code = urlParams.get('code');
 
+
+    // Redirect to homepage if code is METICS or METIOM
+    // if (code === "METICS") {
+    //   window.location.href = "https://admission.met.edu"; // full reload
+    //   // OR navigate("/") if homepage is handled in React Router
+    // }
+
     // Reset states to avoid stale data
     setIsValidCode(true);
     setInstituteName('');
@@ -193,22 +200,29 @@ const RegistrationForm = () => {
             Please select a program to register for:
           </p>
           <div className="flex flex-wrap justify-center mb-4">
-            {Object.entries(instituteMap).map(([code, program]) => (
-              <div
-                key={code}
-                className="w-full md:w-1/2 xl:w-1/2 p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-md"
-              >
-                <h3 className="text-md font-bold text-gray-900 mb-2">{program}</h3>
-                <p className="text-gray-600">
-                  <Link
-                    to={`/register?code=${code}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Register Now
-                  </Link>
-                </p>
-              </div>
-            ))}
+            {Object.entries(instituteMap).map(([code, program]) => {
+
+              // 🔥 Hide METIOM
+              // if (code === "METIOM") return null;
+              // or use → if (code === "METIOM") return null;
+
+              return (
+                <div
+                  key={code}
+                  className="w-full md:w-1/2 xl:w-1/2 p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-md"
+                >
+                  <h3 className="text-md font-bold text-gray-900 mb-2">{program}</h3>
+                  <p className="text-gray-600">
+                    <Link
+                      to={`/register?code=${code}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Register Now
+                    </Link>
+                  </p>
+                </div>
+              );
+            })}
           </div>
           <Link to="/login" className="text-blue-600 hover:underline">
             Already have an account? Login
