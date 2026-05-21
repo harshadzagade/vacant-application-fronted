@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { buildApiUrl, buildAssetUrl, getAcademicYearLabel } from '../utils/appConfig';
 
 const ViewApplication = () => {
   const { applicationId } = useParams();
@@ -32,7 +33,7 @@ const ViewApplication = () => {
           return;
         }
 
-        const userResponse = await fetch('https://admission.met.edu/api/auth/user', {
+        const userResponse = await fetch(buildApiUrl('/auth/user'), {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
@@ -40,7 +41,7 @@ const ViewApplication = () => {
         if (!userResult.success) throw new Error(userResult.message || 'User data fetch failed');
         setUserData(userResult.user);
 
-        const appResponse = await fetch(`https://admission.met.edu/api/application/details/${applicationId}`, {
+        const appResponse = await fetch(buildApiUrl(`/application/details/${applicationId}`), {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!appResponse.ok) throw new Error('Failed to fetch application details');
@@ -119,6 +120,7 @@ const ViewApplication = () => {
     month: 'long',
     day: 'numeric',
   });
+  const academicYearLabel = getAcademicYearLabel(applicationData.submissionDate || applicationData.applicationDate);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col print:min-h-0 print:bg-white">
@@ -130,7 +132,7 @@ const ViewApplication = () => {
         <h2 className="text-lg font-semibold text-center mb-1">
           Application Form for {programName} Admission Against Vacant/Cancellation Seat
         </h2>
-        <p className="text-sm text-center mb-1">Academic Year: 2025-2026</p>
+        <p className="text-sm text-center mb-1">Academic Year: {academicYearLabel}</p>
       </div>
 
       {/* Header */}
@@ -565,7 +567,7 @@ const ViewApplication = () => {
                 <strong>{fullName}</strong>
                 {applicationData.documents.signaturePhoto ? (
                   <img
-                    src={`https://admission.met.edu/${applicationData.documents.signaturePhoto}`}
+                    src={buildAssetUrl(applicationData.documents.signaturePhoto)}
                     alt="Signature"
                     className="w-32 h-20 object-contain mt-2 print:w-24 print:h-16 print:mt-1"
                     style={{ maxWidth: '100%' }}

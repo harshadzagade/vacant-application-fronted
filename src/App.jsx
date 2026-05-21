@@ -23,6 +23,7 @@ function App() {
         <div className="mx-auto print:mx-0 print:max-w-none">
           <Routes>
             <Route path="/register" element={<RegistrationForm />} />
+            <Route path="/widget/register" element={<RegistrationForm />} />
             <Route path="/login" element={<LoginForm />} />
             <Route
               path="/application"

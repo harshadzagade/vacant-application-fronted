@@ -4,6 +4,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import SidebarLayout from './SidebarLayout';
+import { buildApiUrl, buildAssetUrl, getAcademicYearLabel, normalizeAssetPath } from '../utils/appConfig';
 
 const formTypeNames = {
   METIPP: 'Pharmacy Diploma',
@@ -11,6 +12,9 @@ const formTypeNames = {
   METIOM: 'IOM',
   METICS: 'MCA',
 };
+
+const isPdfDocument = (documentPath = '') =>
+  normalizeAssetPath(documentPath).toLowerCase().endsWith('.pdf');
 
 const AdminDashboard = () => {
   const [profile, setProfile] = useState(null);
@@ -30,11 +34,39 @@ const AdminDashboard = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [loadedPrintDocuments, setLoadedPrintDocuments] = useState({});
 
 
 
 
   const navigate = useNavigate();
+
+  const printableDocuments = Object.entries(viewDetails?.documents || {}).filter(
+    ([, path]) => typeof path === 'string' && path.trim()
+  );
+  const academicYearLabel = getAcademicYearLabel(
+    viewDetails?.submissionDate || viewDetails?.applicationDate || new Date()
+  );
+
+  const currentYear = new Date().getFullYear();
+
+  const yearOptions = Array.from(
+    new Set([
+      currentYear,
+      ...allApplications
+        .map((app) => {
+          const dateValue = app.submissionDate || app.applicationDate;
+          if (!dateValue) return null;
+
+          const date = new Date(dateValue);
+          if (Number.isNaN(date.getTime())) return null;
+
+          const year = date.getFullYear();
+          return year >= 2000 ? year : null;
+        })
+        .filter(Boolean),
+    ])
+  ).sort((a, b) => b - a);
 
 
   useEffect(() => {
@@ -49,19 +81,19 @@ const AdminDashboard = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const profRes = await axios.get('https://admission.met.edu/api/admin/auth/profile', { headers });
+        const profRes = await axios.get(buildApiUrl('/admin/auth/profile'), { headers });
         if (profRes.data.success) setProfile(profRes.data.staff);
         else throw new Error(profRes.data.message || 'Failed to load profile');
         // console.log('Profile Response:', profRes.data.staff);
 
 
-        const appsRes = await axios.get('https://admission.met.edu/api/admin/applications', { headers });
+        const appsRes = await axios.get(buildApiUrl('/admin/applications'), { headers });
         // console.log('Applications Response:', appsRes.data.applications);
         if (appsRes.data.success) setApplications(appsRes.data.applications);
         else throw new Error(appsRes.data.message || 'Failed to load applications');
 
 
-        const instRes = await axios.get('https://admission.met.edu/api/admin/applications/institutes', { headers });
+        const instRes = await axios.get(buildApiUrl('/admin/applications/institutes'), { headers });
         if (instRes.data.success) setInstitutes(instRes.data.institutes || []);
         else throw new Error(instRes.data.message || 'Failed to load institutes');
 
@@ -81,6 +113,10 @@ const AdminDashboard = () => {
 
     loadData();
   }, [navigate]);
+
+  useEffect(() => {
+    setLoadedPrintDocuments({});
+  }, [viewDetails?.applicationId]);
 
 
   const applyFilters = () => {
@@ -139,7 +175,7 @@ const AdminDashboard = () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
-        `https://admission.met.edu/api/admin/applications/details/${applicationId}`,
+        buildApiUrl(`/admin/applications/details/${applicationId}`),
         { headers }
       );
 
@@ -159,7 +195,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `https://admission.met.edu/api/admin/applications/status/${applicationId}`,
+        buildApiUrl(`/admin/applications/status/${applicationId}`),
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -284,7 +320,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        'https://admission.met.edu/api/admin/applications/bulk-active',
+        buildApiUrl('/admin/applications/bulk-active'),
         { applicationIds: selectedApps },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -318,7 +354,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        'https://admission.met.edu/api/admin/applications/bulk-inactive',
+        buildApiUrl('/admin/applications/bulk-inactive'),
         { applicationIds: selectedApps },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -332,7 +368,34 @@ const AdminDashboard = () => {
     }
   };
 
-  const handlePrint = () => window.print();
+  const markPrintDocumentLoaded = (documentKey) => {
+    setLoadedPrintDocuments((prev) =>
+      prev[documentKey] ? prev : { ...prev, [documentKey]: true }
+    );
+  };
+
+  const handlePrint = async () => {
+    const timeoutAt = Date.now() + 4000;
+
+    while (Date.now() < timeoutAt) {
+      const pendingDocuments = printableDocuments.filter(([key]) => !loadedPrintDocuments[key]);
+      if (!pendingDocuments.length) break;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    const stillPending = printableDocuments.filter(([key]) => !loadedPrintDocuments[key]);
+    if (stillPending.length) {
+      await Swal.fire({
+        icon: 'info',
+        title: 'Some documents are still loading',
+        text: 'The print dialog will open now, but a few attached documents may need another second to fully render.',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    }
+
+    window.print();
+  };
 
 
   if (isLoading) return (
@@ -385,7 +448,7 @@ const AdminDashboard = () => {
                     className="border px-3 py-2 rounded"
                   >
                     <option value="">All Years</option>
-                    {[2030, 2029, 2028, 2027, 2026,2025, 2024, 2023].map(year => (
+                    {yearOptions.map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
                   </select>
@@ -534,7 +597,7 @@ const AdminDashboard = () => {
                     <h1 className="text-2xl font-bold">{viewDetails?.institute?.name || 'MET Institute'}</h1>
                   </div>
                   <h2 className="text-xl font-semibold mb-2">Application Form for {viewDetails?.institute?.name || 'Institute'} Admission Against Vacant/Cancellation Seat</h2>
-                  <p className="text-sm">Academic Year: 2026-2027</p>
+                  <p className="text-sm">Academic Year: {academicYearLabel}</p>
                 </div>
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto print:shadow-none print:p-4 print:rounded-none print:max-w-none print:max-h-none print:overflow-visible print:h-auto">
                   <div className="flex justify-between items-center mb-6 print:hidden">
@@ -859,7 +922,7 @@ const AdminDashboard = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                   </svg>
                                   <div>
-                                    <a href={`https://admission.met.edu/${path}`} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 print:no-underline print:text-black">
+                                    <a href={buildAssetUrl(path)} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 print:no-underline print:text-black">
                                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                                     </a>
                                     {/* <span className="block text-sm text-gray-600 print:inline print:text-black">https://admission.met.edu/{path}</span> */}
@@ -893,7 +956,7 @@ const AdminDashboard = () => {
                     <p className="text-gray-800">
                       <strong>{viewDetails.user?.firstName + ' ' + viewDetails.user?.lastName || 'Signature'}</strong> {viewDetails.documents?.signaturePhoto ? (
                         <img
-                          src={`https://admission.met.edu/${viewDetails.documents.signaturePhoto}`}
+                          src={buildAssetUrl(viewDetails.documents.signaturePhoto)}
                           alt="Signature"
                           className="w-32 h-20 object-contain mt-2"
                           style={{ maxWidth: '100%' }}
@@ -904,7 +967,7 @@ const AdminDashboard = () => {
                     </p>
                   </section>
 
-                  {Object.entries(viewDetails.documents).map(([key, path]) =>
+                  {Object.entries(viewDetails.documents || {}).map(([key, path]) =>
                     path && (
                       <div
                         key={key}
@@ -915,17 +978,20 @@ const AdminDashboard = () => {
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                         </h3>
 
-                        {path.endsWith('.pdf') ? (
+                        {isPdfDocument(path) ? (
                           <iframe
-                            src={`https://admission.met.edu/${path}`}
+                            src={buildAssetUrl(path)}
                             className="w-full h-[1000px]"
                             title={key}
+                            onLoad={() => markPrintDocumentLoaded(key)}
                           />
                         ) : (
                           <img
-                            src={`https://admission.met.edu/${path}`}
+                            src={buildAssetUrl(path)}
                             alt={key}
                             className="mx-auto max-w-full h-auto"
+                            onLoad={() => markPrintDocumentLoaded(key)}
+                            onError={() => markPrintDocumentLoaded(key)}
                           />
                         )}
                       </div>

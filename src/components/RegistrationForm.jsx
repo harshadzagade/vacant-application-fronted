@@ -27,6 +27,7 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  
   const [instituteName, setInstituteName] = useState('');
   const [isValidCode, setIsValidCode] = useState(true);
 
