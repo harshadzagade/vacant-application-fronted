@@ -27,12 +27,14 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  
+
   const [instituteName, setInstituteName] = useState('');
   const [isValidCode, setIsValidCode] = useState(true);
 
   const navigate = useNavigate();
   const location = useLocation(); // Get current URL
+
+  const isWidget = location.pathname.includes('/widget/register');
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -187,35 +189,58 @@ const RegistrationForm = () => {
   // Render error message with clickable program cards if institute code is invalid or missing
   if (!isValidCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg text-center">
-          <div className="flex justify-center mb-6">
-            <img
-              src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
-              alt="Logo"
-              className="h-[5rem] w-auto"
-            />
-          </div>
+      <div
+        className={
+          isWidget
+            ? "w-full flex items-center justify-center bg-white"
+            : "min-h-screen flex items-center justify-center bg-gray-100"
+        }
+      >
+        <div
+          className={
+            isWidget
+              ? "p-4 max-w-md w-full bg-white text-center"
+              : "p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg text-center"
+          }
+        >
+          {!isWidget && (
+            <div className="flex justify-center mb-6">
+              <img
+                src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
+                alt="Logo"
+                className="h-[5rem] w-auto"
+              />
+            </div>
+          )}
+
           <h2 className="text-2xl font-bold mb-4 text-red-600">Invalid URL</h2>
+
           <p className="text-gray-600 mb-4">
             Please select a program to register for:
           </p>
+
           <div className="flex flex-wrap justify-center mb-4">
             {Object.entries(instituteMap).map(([code, program]) => {
-
-              // 🔥 Hide METIOM
-              // if (code === "METIOM") return null;
-              // or use → if (code === "METIOM") return null;
-
               return (
                 <div
                   key={code}
-                  className="w-full md:w-1/2 xl:w-1/2 p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-md"
+                  className={
+                    isWidget
+                      ? "w-full p-3 bg-gray-100 border border-gray-200 rounded-lg mb-3"
+                      : "w-full md:w-1/2 xl:w-1/2 p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-md"
+                  }
                 >
-                  <h3 className="text-md font-bold text-gray-900 mb-2">{program}</h3>
+                  <h3 className="text-md font-bold text-gray-900 mb-2">
+                    {program}
+                  </h3>
+
                   <p className="text-gray-600">
                     <Link
-                      to={`/register?code=${code}`}
+                      to={
+                        isWidget
+                          ? `/widget/register?code=${code}`
+                          : `/register?code=${code}`
+                      }
                       className="text-blue-600 hover:underline"
                     >
                       Register Now
@@ -225,9 +250,12 @@ const RegistrationForm = () => {
               );
             })}
           </div>
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Already have an account? Login
-          </Link>
+
+          {!isWidget && (
+            <Link to="/login" className="text-blue-600 hover:underline">
+              Already have an account? Login
+            </Link>
+          )}
         </div>
       </div>
     );
