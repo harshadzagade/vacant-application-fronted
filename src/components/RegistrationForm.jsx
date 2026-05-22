@@ -274,25 +274,42 @@ const RegistrationForm = () => {
 
   // Render registration form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg">
-        <div className="flex justify-center mb-6">
-          <img
-            src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
-            alt="Logo"
-            className="h-[5rem] w-auto"
-          />
-        </div>
-        <h2 className="text-3xl font-bold mb-6 text-center text-red-600">
-          Admissions Application for {
-            instituteName === 'BPHA' ? 'Pharmacy Degree' :
-              instituteName === 'DPHA' ? 'Pharmacy Diploma' :
-                instituteName === 'MMS' ? 'MMS' :
-                  instituteName === 'MCA' ? 'MCA' :
-                    instituteName || '....'
-          }
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div
+      className={
+        isWidget
+          ? "w-full flex items-center justify-center bg-white"
+          : "min-h-screen flex items-center justify-center bg-gray-100"
+      }
+    >
+      <div
+        className={
+          isWidget
+            ? "p-4 max-w-md w-full bg-white rounded-xl"
+            : "p-8 max-w-3xl w-full bg-white shadow-lg rounded-lg"
+        }
+      >
+        {!isWidget && (
+          <>
+            <div className="flex justify-center mb-6">
+              <img
+                src="https://www.met.edu/frontendassets/images/MET_College_in_Mumbai_logo.png"
+                alt="Logo"
+                className="h-[5rem] w-auto"
+              />
+            </div>
+
+            <h2 className="text-3xl font-bold mb-6 text-center text-red-600">
+              Admissions Application for {
+                instituteName === 'BPHA' ? 'Pharmacy Degree' :
+                  instituteName === 'DPHA' ? 'Pharmacy Diploma' :
+                    instituteName === 'MMS' ? 'MMS' :
+                      instituteName === 'MCA' ? 'MCA' :
+                        instituteName || '....'
+              }
+            </h2>
+          </>
+        )}
+        <div className={isWidget ? "grid grid-cols-1 gap-3" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
           <div>
             <input
               name="firstName"
@@ -365,7 +382,7 @@ const RegistrationForm = () => {
           )}
         </div>
 
-        <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className={isWidget ? "mt-5 flex flex-col gap-3" : "mt-6 flex flex-col md:flex-row gap-4 justify-between items-center"}>
           {!isOtpSent && (
             <button
               onClick={handleSendOtp}
